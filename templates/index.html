@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Hero -->
+<section class="hero">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+            <div>
+                <span class="badge badge-date mb-2"><i class="bi bi-calendar-event me-1"></i>{{ info.date }}</span>
+                <h1 class="mt-2 mb-1">{{ info.title }}</h1>
+                <p class="mb-0 opacity-75">{{ info.description }}</p>
+            </div>
+            <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">
+                <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
+            </button>
+        </div>
+
+        <!-- Search -->
+        <div class="search-box mt-4">
+            <i class="bi bi-search"></i>
+            <input type="text" id="searchInput" class="form-control form-control-lg"
+                   placeholder="Search by area council, ward, polling unit, or party..."
+                   autocomplete="off">
+        </div>
+    </div>
+</section>
+
+<!-- Stats -->
+<section class="py-4">
+    <div class="container">
+        <div class="row g-3">
+            <div class="col-6 col-md-3">
+                <div class="card stat-card shadow-sm h-100">
+                    <div class="card-body text-center">
+                        <div class="stat-number">{{ info.area_councils|length }}</div>
+                        <div class="stat-label">Area Councils</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card stat-card shadow-sm h-100">
+                    <div class="card-body text-center">
+                        <div class="stat-number">{{ total_units }}</div>
+                        <div class="stat-label">Units Reported</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card stat-card shadow-sm h-100">
+                    <div class="card-body text-center">
+                        <div class="stat-number">{{ "{:,}".format(total_votes) }}</div>
+                        <div class="stat-label">Total Votes</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card stat-card shadow-sm h-100">
+                    <div class="card-body text-center">
+                        <div class="stat-number">{{ "{:,}".format(info.total_polling_units) }}</div>
+                        <div class="stat-label">Total PUs (FCT)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Party Totals -->
+<section class="pb-4">
+    <div class="container">
+        <div class="card shadow-sm" style="border-radius:12px;">
+            <div class="card-body">
+                <h5 class="card-title fw-bold mb-3"><i class="bi bi-bar-chart-fill me-2" style="color:var(--ng-green)"></i>Party Vote Totals (from reported units)</h5>
+                {% set max_votes = sorted_parties[0][1] if sorted_parties else 1 %}
+                {% for party, votes in sorted_parties %}
+                <div class="d-flex align-items-center mb-2">
+                    <span class="fw-bold me-2" style="min-width:60px;">{{ party }}</span>
+                    <div class="flex-grow-1 me-2">
+                        <div class="progress" style="height:22px;border-radius:6px;">
+                            <div class="progress-bar" role="progressbar"
+                                 style="width:{{ (votes / max_votes * 100)|round(1) }}%;background:{{ party_colors.get(party, '#666') }};"
+                                 aria-valuenow="{{ votes }}">
+                            </div>
+                        </div>
+                    </div>
+                    <span class="fw-bold" style="min-width:60px;text-align:right;">{{ "{:,}".format(votes) }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Results by Area Council -->
+<section class="pb-5">
+    <div class="container">
+        <h4 class="fw-bold mb-3"><i class="bi bi-geo-alt-fill me-2" style="color:var(--ng-green)"></i>Results by Area Council</h4>
+
+        <div id="noResults" class="no-results-msg hidden">
+            <i class="bi bi-search" style="font-size:2rem;"></i>
+            <p class="mt-2 mb-0">No results match your search.</p>
+        </div>
+
+        <div class="accordion" id="resultsAccordion">
+            {% for ac_name, wards in results.items() %}
+            <div class="accordion-item mb-2 border-0 shadow-sm" style="border-radius:12px;overflow:hidden;" data-ac="{{ ac_name }}">
+                <h2 class="accordion-header">
+                    <button class="accordion-button {% if not loop.first %}collapsed{% endif %}" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#ac-{{ loop.index }}">
+                        <i class="bi bi-building me-2"></i>{{ ac_name }}
+                        {% set ward_count = wards|length %}
+                        {% set unit_count = wards.values()|map('length')|sum %}
+                        <span class="badge bg-secondary ms-2">{{ ward_count }} ward{{ 's' if ward_count != 1 else '' }}, {{ unit_count }} unit{{ 's' if unit_count != 1 else '' }}</span>
+                    </button>
+                </h2>
+                <div id="ac-{{ loop.index }}" class="accordion-collapse collapse {% if loop.first %}show{% endif %}"
+                     data-bs-parent="#resultsAccordion">
+                    <div class="accordion-body">
+                        {% if not wards %}
+                        <p class="text-muted mb-0"><i class="bi bi-hourglass-split me-1"></i>Results pending — awaiting collation.</p>
+                        {% endif %}
+                        {% for ward_name, units in wards.items() %}
+                        <div class="ward-section" data-ward="{{ ward_name }}">
+                            <h6 class="fw-bold text-uppercase mb-3" style="color:var(--ng-green);">
+                                <i class="bi bi-pin-map me-1"></i>{{ ward_name }}
+                            </h6>
+                            <div class="row g-2">
+                                {% for unit_name, parties in units.items() %}
+                                {% set max_party = parties|dictsort(by='value', reverse=true)|first %}
+                                <div class="col-md-6 col-lg-4" data-pu="{{ unit_name }}">
+                                    <div class="card pu-card p-3 h-100">
+                                        <div class="fw-semibold mb-2 small">{{ unit_name }}</div>
+                                        <div class="d-flex flex-wrap gap-1">
+                                            {% for party, votes in parties|dictsort(by='value', reverse=true) %}
+                                            <span class="party-badge {% if party == max_party[0] and max_party[1] > 0 %}winner{% endif %}"
+                                                  style="background:{{ party_colors.get(party, '#666') }};"
+                                                  data-party="{{ party }}">
+                                                {{ party }} {{ votes }}
+                                                {% if party == max_party[0] and max_party[1] > 0 %}<i class="bi bi-trophy-fill" style="font-size:0.7rem;"></i>{% endif %}
+                                            </span>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const searchInput = document.getElementById('searchInput');
+const noResults = document.getElementById('noResults');
+
+searchInput.addEventListener('input', function() {
+    const q = this.value.toLowerCase().trim();
+    let anyVisible = false;
+
+    document.querySelectorAll('.accordion-item').forEach(ac => {
+        const acName = ac.dataset.ac.toLowerCase();
+        let acVisible = false;
+
+        ac.querySelectorAll('.ward-section').forEach(ward => {
+            const wardName = ward.dataset.ward.toLowerCase();
+            let wardVisible = false;
+
+            ward.querySelectorAll('[data-pu]').forEach(pu => {
+                const puName = pu.dataset.pu.toLowerCase();
+                const parties = pu.querySelectorAll('[data-party]');
+                let partyMatch = false;
+                parties.forEach(p => {
+                    if (p.dataset.party.toLowerCase().includes(q)) partyMatch = true;
+                });
+
+                const match = !q || acName.includes(q) || wardName.includes(q) || puName.includes(q) || partyMatch;
+                pu.classList.toggle('hidden', !match);
+                if (match) wardVisible = true;
+            });
+
+            ward.classList.toggle('hidden', !wardVisible);
+            if (wardVisible) acVisible = true;
+        });
+
+        ac.classList.toggle('hidden', !acVisible);
+        if (acVisible) {
+            anyVisible = true;
+            // Auto-expand matching accordions when searching
+            if (q) {
+                const collapse = ac.querySelector('.accordion-collapse');
+                if (collapse && !collapse.classList.contains('show')) {
+                    new bootstrap.Collapse(collapse, {toggle: true});
+                }
+            }
+        }
+    });
+
+    noResults.classList.toggle('hidden', anyVisible || !q);
+});
+
+function toggleTheme() {
+    const html = document.documentElement;
+    const icon = document.getElementById('themeIcon');
+    if (html.getAttribute('data-bs-theme') === 'dark') {
+        html.setAttribute('data-bs-theme', 'light');
+        icon.className = 'bi bi-moon-stars-fill';
+    } else {
+        html.setAttribute('data-bs-theme', 'dark');
+        icon.className = 'bi bi-sun-fill';
+    }
+}
+</script>
+{% endblock %}
