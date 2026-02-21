@@ -389,46 +389,67 @@
     const hint = document.getElementById('searchHint');
     const countEl = document.getElementById('searchCount');
 
+    /* Collect all searchable text once for fast lookup */
+    const puCards = [];
+    document.querySelectorAll('[data-pu]').forEach(pu => {
+        const parties = [];
+        pu.querySelectorAll('[data-party]').forEach(p => parties.push(p.dataset.party.toLowerCase()));
+        puCards.push({
+            el: pu,
+            ward: pu.closest('.ward-block'),
+            ac: pu.closest('.accordion-item'),
+            text: [
+                pu.dataset.pu.toLowerCase(),
+                (pu.closest('.ward-block')?.dataset.ward || '').toLowerCase(),
+                (pu.closest('.accordion-item')?.dataset.ac || '').toLowerCase(),
+                ...parties
+            ].join(' ')
+        });
+    });
+
+    /* Searchable sections (chairmanship, rivers, kano) — handle parent/child separately */
+    const searchSections = document.querySelectorAll('section[data-searchable]');
+    const searchCards = document.querySelectorAll('.winner-card[data-searchable], .col-md-6[data-searchable]');
+
     function doSearch() {
         const q = input.value.toLowerCase().trim();
         let anyVisible = false;
         let matchCount = 0;
 
-        // Toggle clear/hint
         clearBtn.classList.toggle('active', !!q);
         hint.style.display = q ? 'none' : '';
         countEl.classList.toggle('active', !!q);
 
-        // FCT accordion
-        document.querySelectorAll('.accordion-item').forEach(ac => {
-            const acName = (ac.dataset.ac || '').toLowerCase();
-            let acVisible = false;
+        /* ── FCT polling units ── */
+        const visibleWards = new Set();
+        const visibleACs = new Set();
 
-            ac.querySelectorAll('.ward-block').forEach(ward => {
-                const wardName = (ward.dataset.ward || '').toLowerCase();
-                let wardVisible = false;
-
-                ward.querySelectorAll('[data-pu]').forEach(pu => {
-                    const puName = pu.dataset.pu.toLowerCase();
-                    let partyMatch = false;
-                    pu.querySelectorAll('[data-party]').forEach(p => {
-                        if (p.dataset.party.toLowerCase().includes(q)) partyMatch = true;
-                    });
-                    const match = !q || acName.includes(q) || wardName.includes(q) || puName.includes(q) || partyMatch;
-                    pu.classList.toggle('hidden', !match);
-                    if (match) { wardVisible = true; matchCount++; }
-                });
-
-                ward.classList.toggle('hidden', !wardVisible);
-                if (wardVisible) acVisible = true;
-            });
-
-            if (!ac.querySelectorAll('.ward-block').length && acName.includes(q)) {
-                acVisible = true;
+        puCards.forEach(pu => {
+            const match = !q || pu.text.includes(q);
+            pu.el.classList.toggle('hidden', !match);
+            if (match) {
+                matchCount++;
+                anyVisible = true;
+                if (pu.ward) visibleWards.add(pu.ward);
+                if (pu.ac) visibleACs.add(pu.ac);
             }
+        });
 
-            ac.classList.toggle('hidden', !acVisible);
-            if (acVisible) {
+        /* Show/hide wards */
+        document.querySelectorAll('.ward-block').forEach(w => {
+            w.classList.toggle('hidden', q && !visibleWards.has(w));
+        });
+
+        /* Show/hide accordion items + expand matching */
+        document.querySelectorAll('.accordion-item[data-ac]').forEach(ac => {
+            const acName = (ac.dataset.ac || '').toLowerCase();
+            const hasVisiblePUs = visibleACs.has(ac);
+            const nameMatch = q && acName.includes(q);
+            const emptyAC = !ac.querySelectorAll('.ward-block').length;
+            const show = !q || hasVisiblePUs || (emptyAC && nameMatch);
+
+            ac.classList.toggle('hidden', !show);
+            if (show) {
                 anyVisible = true;
                 if (q) {
                     const col = ac.querySelector('.accordion-collapse');
@@ -439,23 +460,48 @@
             }
         });
 
-        // Other sections
-        document.querySelectorAll('[data-searchable]').forEach(el => {
-            const text = el.dataset.searchable.toLowerCase();
-            const inner = el.textContent.toLowerCase();
+        /* ── Sections (chairmanship, rivers, kano) ── */
+        /* First: filter child cards within sections */
+        const sectionsWithVisibleChild = new Set();
+
+        searchCards.forEach(card => {
+            const text = card.dataset.searchable.toLowerCase();
+            const inner = card.textContent.toLowerCase();
             const match = !q || text.includes(q) || inner.includes(q);
-            el.classList.toggle('hidden', !match);
-            if (match) anyVisible = true;
+            card.classList.toggle('hidden', !match);
+            if (match) {
+                anyVisible = true;
+                const parentSection = card.closest('section[data-searchable]');
+                if (parentSection) sectionsWithVisibleChild.add(parentSection);
+            }
+        });
+
+        /* Then: show parent sections if any child matched */
+        searchSections.forEach(sec => {
+            const text = sec.dataset.searchable.toLowerCase();
+            const inner = sec.textContent.toLowerCase();
+            const childMatch = sectionsWithVisibleChild.has(sec);
+            const selfMatch = !q || text.includes(q) || inner.includes(q);
+            sec.classList.toggle('hidden', !(selfMatch || childMatch));
+            if (selfMatch || childMatch) anyVisible = true;
         });
 
         noResults.classList.toggle('hidden', anyVisible || !q);
-        countEl.textContent = q ? matchCount + ' unit' + (matchCount !== 1 ? 's' : '') : '';
+        countEl.textContent = q ? (matchCount + ' unit' + (matchCount !== 1 ? 's' : '')) : '';
+
+        /* ── Force reveal + bar animations for search results ── */
+        if (q) {
+            document.querySelectorAll('.reveal:not(.hidden)').forEach(el => el.classList.add('visible'));
+            document.querySelectorAll('[data-pu]:not(.hidden) [data-width]').forEach(bar => {
+                bar.style.width = bar.dataset.width;
+            });
+        }
     }
 
     input.addEventListener('input', doSearch);
     clearBtn.addEventListener('click', () => { input.value = ''; doSearch(); input.focus(); });
 
-    // Smooth scroll for nav pills
+    /* Smooth scroll for nav pills */
     document.querySelectorAll('.nav-pill').forEach(pill => {
         pill.addEventListener('click', e => {
             e.preventDefault();
@@ -468,7 +514,7 @@
         });
     });
 
-    // Active pill on scroll
+    /* Active pill on scroll */
     const sections = ['chairmanship-section','fct-section','rivers-section','kano-section'];
     const pills = document.querySelectorAll('.nav-pill');
     window.addEventListener('scroll', () => {
