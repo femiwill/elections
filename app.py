@@ -1,45 +1,54 @@
 import os
 import json
-from flask import Flask, render_template, jsonify, request
-from data import RESULTS, ELECTION_INFO, PARTY_COLORS
+from flask import Flask, render_template, jsonify
+from data import (
+    FCT_RESULTS, FCT_CHAIRMANSHIP_WINNERS,
+    RIVERS_BYELECTIONS, KANO_BYELECTIONS,
+    ELECTION_INFO, PARTY_COLORS,
+)
 
 app = Flask(__name__)
 
 
 @app.route("/")
 def index():
-    # Compute summary stats
-    total_units = 0
-    total_votes = 0
-    party_totals = {}
+    # FCT stats
+    fct_total_units = 0
+    fct_total_votes = 0
+    fct_party_totals = {}
 
-    for ac, wards in RESULTS.items():
+    for ac, wards in FCT_RESULTS.items():
         for ward, units in wards.items():
             for unit, parties in units.items():
-                total_units += 1
+                fct_total_units += 1
                 for party, votes in parties.items():
-                    total_votes += votes
-                    party_totals[party] = party_totals.get(party, 0) + votes
+                    fct_total_votes += votes
+                    fct_party_totals[party] = fct_party_totals.get(party, 0) + votes
 
-    # Sort parties by total votes
-    sorted_parties = sorted(party_totals.items(), key=lambda x: x[1], reverse=True)
+    fct_sorted_parties = sorted(fct_party_totals.items(), key=lambda x: x[1], reverse=True)
 
     return render_template(
         "index.html",
-        results=RESULTS,
-        results_json=json.dumps(RESULTS),
+        fct_results=FCT_RESULTS,
+        chairmanship_winners=FCT_CHAIRMANSHIP_WINNERS,
+        rivers=RIVERS_BYELECTIONS,
+        kano=KANO_BYELECTIONS,
         info=ELECTION_INFO,
         party_colors=PARTY_COLORS,
-        party_colors_json=json.dumps(PARTY_COLORS),
-        total_units=total_units,
-        total_votes=total_votes,
-        sorted_parties=sorted_parties,
+        fct_total_units=fct_total_units,
+        fct_total_votes=fct_total_votes,
+        fct_sorted_parties=fct_sorted_parties,
     )
 
 
 @app.route("/api/results")
 def api_results():
-    return jsonify(RESULTS)
+    return jsonify({
+        "fct": FCT_RESULTS,
+        "chairmanship_winners": FCT_CHAIRMANSHIP_WINNERS,
+        "rivers": RIVERS_BYELECTIONS,
+        "kano": KANO_BYELECTIONS,
+    })
 
 
 if __name__ == "__main__":

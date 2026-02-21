@@ -19,8 +19,20 @@
         <div class="search-box mt-4">
             <i class="bi bi-search"></i>
             <input type="text" id="searchInput" class="form-control form-control-lg"
-                   placeholder="Search by area council, ward, polling unit, or party..."
+                   placeholder="Search by state, area council, ward, polling unit, or party..."
                    autocomplete="off">
+        </div>
+    </div>
+</section>
+
+<!-- Quick Nav -->
+<section class="py-3 bg-light">
+    <div class="container">
+        <div class="d-flex flex-wrap gap-2 justify-content-center">
+            <a href="#fct-section" class="btn btn-sm btn-outline-success fw-bold"><i class="bi bi-building me-1"></i>FCT Area Councils</a>
+            <a href="#chairmanship-section" class="btn btn-sm btn-outline-success fw-bold"><i class="bi bi-trophy me-1"></i>Chairmanship Winners</a>
+            <a href="#rivers-section" class="btn btn-sm btn-outline-danger fw-bold"><i class="bi bi-geo me-1"></i>Rivers By-Elections</a>
+            <a href="#kano-section" class="btn btn-sm btn-outline-warning fw-bold"><i class="bi bi-geo me-1"></i>Kano By-Elections</a>
         </div>
     </div>
 </section>
@@ -32,32 +44,32 @@
             <div class="col-6 col-md-3">
                 <div class="card stat-card shadow-sm h-100">
                     <div class="card-body text-center">
-                        <div class="stat-number">{{ info.area_councils|length }}</div>
-                        <div class="stat-label">Area Councils</div>
+                        <div class="stat-number">3</div>
+                        <div class="stat-label">States/Territory</div>
                     </div>
                 </div>
             </div>
             <div class="col-6 col-md-3">
                 <div class="card stat-card shadow-sm h-100">
                     <div class="card-body text-center">
-                        <div class="stat-number">{{ total_units }}</div>
-                        <div class="stat-label">Units Reported</div>
+                        <div class="stat-number">{{ fct_total_units }}</div>
+                        <div class="stat-label">FCT Units Reported</div>
                     </div>
                 </div>
             </div>
             <div class="col-6 col-md-3">
                 <div class="card stat-card shadow-sm h-100">
                     <div class="card-body text-center">
-                        <div class="stat-number">{{ "{:,}".format(total_votes) }}</div>
-                        <div class="stat-label">Total Votes</div>
+                        <div class="stat-number">{{ "{:,}".format(fct_total_votes) }}</div>
+                        <div class="stat-label">FCT Votes Counted</div>
                     </div>
                 </div>
             </div>
             <div class="col-6 col-md-3">
                 <div class="card stat-card shadow-sm h-100">
                     <div class="card-body text-center">
-                        <div class="stat-number">{{ "{:,}".format(info.total_polling_units) }}</div>
-                        <div class="stat-label">Total PUs (FCT)</div>
+                        <div class="stat-number">10</div>
+                        <div class="stat-label">Seats Decided</div>
                     </div>
                 </div>
             </div>
@@ -65,14 +77,47 @@
     </div>
 </section>
 
-<!-- Party Totals -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- FCT CHAIRMANSHIP WINNERS -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<section class="pb-4" id="chairmanship-section" data-searchable="chairmanship winners fct area council">
+    <div class="container">
+        <div class="card shadow-sm" style="border-radius:12px;border-top:4px solid var(--ng-green);">
+            <div class="card-body">
+                <h5 class="card-title fw-bold mb-1"><i class="bi bi-trophy-fill me-2" style="color:var(--ng-green)"></i>FCT Chairmanship Winners (Declared by INEC)</h5>
+                <p class="text-muted small mb-3">{{ info.fct.summary }}</p>
+                <div class="row g-2">
+                    {% for ac, data in chairmanship_winners.items() %}
+                    <div class="col-md-4 col-lg-2" data-searchable="{{ ac }} {{ data.winner }} {{ data.party }}">
+                        <div class="card h-100 text-center p-3" style="border-radius:10px;border:2px solid {{ party_colors.get(data.party, '#666') }}20;">
+                            <div class="fw-bold mb-1" style="color:{{ party_colors.get(data.party, '#666') }};">{{ ac }}</div>
+                            <div class="small fw-semibold">{{ data.winner }}</div>
+                            <span class="badge mt-1" style="background:{{ party_colors.get(data.party, '#666') }};color:white;">
+                                {{ data.party }} <i class="bi bi-check-circle-fill"></i>
+                            </span>
+                            {% if data.votes %}
+                            <div class="small text-muted mt-1">{{ "{:,}".format(data.votes) }} votes</div>
+                            {% endif %}
+                            {% if data.note %}
+                            <div class="small text-muted fst-italic">{{ data.note }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FCT Party Totals -->
 <section class="pb-4">
     <div class="container">
         <div class="card shadow-sm" style="border-radius:12px;">
             <div class="card-body">
-                <h5 class="card-title fw-bold mb-3"><i class="bi bi-bar-chart-fill me-2" style="color:var(--ng-green)"></i>Party Vote Totals (from reported units)</h5>
-                {% set max_votes = sorted_parties[0][1] if sorted_parties else 1 %}
-                {% for party, votes in sorted_parties %}
+                <h5 class="card-title fw-bold mb-3"><i class="bi bi-bar-chart-fill me-2" style="color:var(--ng-green)"></i>FCT Party Vote Totals (from reported polling units)</h5>
+                {% set max_votes = fct_sorted_parties[0][1] if fct_sorted_parties else 1 %}
+                {% for party, votes in fct_sorted_parties %}
                 <div class="d-flex align-items-center mb-2">
                     <span class="fw-bold me-2" style="min-width:60px;">{{ party }}</span>
                     <div class="flex-grow-1 me-2">
@@ -91,10 +136,12 @@
     </div>
 </section>
 
-<!-- Results by Area Council -->
-<section class="pb-5">
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- FCT POLLING UNIT RESULTS -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<section class="pb-5" id="fct-section">
     <div class="container">
-        <h4 class="fw-bold mb-3"><i class="bi bi-geo-alt-fill me-2" style="color:var(--ng-green)"></i>Results by Area Council</h4>
+        <h4 class="fw-bold mb-3"><i class="bi bi-geo-alt-fill me-2" style="color:var(--ng-green)"></i>FCT Polling Unit Results</h4>
 
         <div id="noResults" class="no-results-msg hidden">
             <i class="bi bi-search" style="font-size:2rem;"></i>
@@ -102,7 +149,7 @@
         </div>
 
         <div class="accordion" id="resultsAccordion">
-            {% for ac_name, wards in results.items() %}
+            {% for ac_name, wards in fct_results.items() %}
             <div class="accordion-item mb-2 border-0 shadow-sm" style="border-radius:12px;overflow:hidden;" data-ac="{{ ac_name }}">
                 <h2 class="accordion-header">
                     <button class="accordion-button {% if not loop.first %}collapsed{% endif %}" type="button"
@@ -111,13 +158,18 @@
                         {% set ward_count = wards|length %}
                         {% set unit_count = wards.values()|map('length')|sum %}
                         <span class="badge bg-secondary ms-2">{{ ward_count }} ward{{ 's' if ward_count != 1 else '' }}, {{ unit_count }} unit{{ 's' if unit_count != 1 else '' }}</span>
+                        {% if ac_name in chairmanship_winners %}
+                        <span class="badge ms-1" style="background:{{ party_colors.get(chairmanship_winners[ac_name].party, '#666') }};">
+                            Chair: {{ chairmanship_winners[ac_name].party }} <i class="bi bi-check-circle-fill"></i>
+                        </span>
+                        {% endif %}
                     </button>
                 </h2>
                 <div id="ac-{{ loop.index }}" class="accordion-collapse collapse {% if loop.first %}show{% endif %}"
                      data-bs-parent="#resultsAccordion">
                     <div class="accordion-body">
                         {% if not wards %}
-                        <p class="text-muted mb-0"><i class="bi bi-hourglass-split me-1"></i>Results pending — awaiting collation.</p>
+                        <p class="text-muted mb-0"><i class="bi bi-hourglass-split me-1"></i>No polling unit data available yet. Chairmanship winner declared above.</p>
                         {% endif %}
                         {% for ward_name, units in wards.items() %}
                         <div class="ward-section" data-ward="{{ ward_name }}">
@@ -153,6 +205,113 @@
         </div>
     </div>
 </section>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- RIVERS STATE BY-ELECTIONS -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<section class="pb-5" id="rivers-section" data-searchable="rivers state by-election ahoada khana">
+    <div class="container">
+        <h4 class="fw-bold mb-3"><i class="bi bi-geo-alt-fill me-2" style="color:#E3242B"></i>Rivers State Assembly By-Elections</h4>
+        <p class="text-muted mb-3">{{ info.rivers.summary }}</p>
+        <div class="row g-3">
+            {% for constituency, data in rivers.items() %}
+            <div class="col-md-6" data-searchable="{{ constituency }} {{ data.winner }} rivers {{ data.winner_party }}">
+                <div class="card shadow-sm h-100" style="border-radius:12px;border-top:4px solid #E3242B;">
+                    <div class="card-body">
+                        <h6 class="fw-bold">{{ constituency }}</h6>
+                        <p class="text-muted small mb-2">{{ data.type }}</p>
+
+                        <!-- Winner -->
+                        <div class="d-flex align-items-center mb-3 p-2 rounded" style="background:#f0fff0;">
+                            <i class="bi bi-trophy-fill me-2" style="color:var(--ng-green);font-size:1.3rem;"></i>
+                            <div>
+                                <div class="fw-bold">{{ data.winner }}</div>
+                                <span class="badge" style="background:{{ party_colors.get(data.winner_party, '#666') }};">{{ data.winner_party }}</span>
+                            </div>
+                        </div>
+
+                        <!-- All results -->
+                        {% for candidate, votes in data.results.items() %}
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="small">{{ candidate }}</span>
+                            <span class="fw-bold">{{ "{:,}".format(votes) }}</span>
+                        </div>
+                        {% endfor %}
+
+                        {% if data.total_valid %}
+                        <hr class="my-2">
+                        <div class="d-flex justify-content-between small text-muted">
+                            <span>Total valid votes</span>
+                            <span class="fw-bold">{{ "{:,}".format(data.total_valid) }}</span>
+                        </div>
+                        {% endif %}
+                        {% if data.registered_voters %}
+                        <div class="d-flex justify-content-between small text-muted">
+                            <span>Registered voters</span>
+                            <span>{{ "{:,}".format(data.registered_voters) }}</span>
+                        </div>
+                        {% endif %}
+                        {% if data.rejected %}
+                        <div class="d-flex justify-content-between small text-muted">
+                            <span>Rejected ballots</span>
+                            <span>{{ data.rejected }}</span>
+                        </div>
+                        {% endif %}
+
+                        {% if data.note %}
+                        <div class="mt-2 small text-muted fst-italic"><i class="bi bi-info-circle me-1"></i>{{ data.note }}</div>
+                        {% endif %}
+                        {% if data.returning_officer %}
+                        <div class="mt-1 small text-muted">Returning Officer: {{ data.returning_officer }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- KANO STATE BY-ELECTIONS -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<section class="pb-5" id="kano-section" data-searchable="kano state by-election municipal ungogo">
+    <div class="container">
+        <h4 class="fw-bold mb-3"><i class="bi bi-geo-alt-fill me-2" style="color:#FFD700"></i>Kano State Assembly By-Elections</h4>
+        <p class="text-muted mb-3">{{ info.kano.summary }}</p>
+        <div class="row g-3">
+            {% for constituency, data in kano.items() %}
+            <div class="col-md-6" data-searchable="{{ constituency }} kano {{ data.winner_party or '' }}">
+                <div class="card shadow-sm h-100" style="border-radius:12px;border-top:4px solid #FFD700;">
+                    <div class="card-body">
+                        <h6 class="fw-bold">{{ constituency }}</h6>
+                        <p class="text-muted small mb-2">{{ data.type }}</p>
+
+                        {% if data.winner %}
+                        <div class="d-flex align-items-center mb-3 p-2 rounded" style="background:#f0fff0;">
+                            <i class="bi bi-trophy-fill me-2" style="color:var(--ng-green);font-size:1.3rem;"></i>
+                            <div>
+                                <div class="fw-bold">{{ data.winner }}</div>
+                                <span class="badge" style="background:{{ party_colors.get(data.winner_party, '#666') }};">{{ data.winner_party }}</span>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="p-2 rounded mb-2" style="background:#fff8e1;">
+                            <i class="bi bi-hourglass-split me-1"></i>
+                            <span class="small fw-semibold">Results awaiting official declaration</span>
+                        </div>
+                        {% endif %}
+
+                        {% if data.note %}
+                        <div class="small text-muted fst-italic"><i class="bi bi-info-circle me-1"></i>{{ data.note }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
 {% endblock %}
 
 {% block scripts %}
@@ -164,12 +323,13 @@ searchInput.addEventListener('input', function() {
     const q = this.value.toLowerCase().trim();
     let anyVisible = false;
 
+    // Search FCT accordion items
     document.querySelectorAll('.accordion-item').forEach(ac => {
-        const acName = ac.dataset.ac.toLowerCase();
+        const acName = (ac.dataset.ac || '').toLowerCase();
         let acVisible = false;
 
         ac.querySelectorAll('.ward-section').forEach(ward => {
-            const wardName = ward.dataset.ward.toLowerCase();
+            const wardName = (ward.dataset.ward || '').toLowerCase();
             let wardVisible = false;
 
             ward.querySelectorAll('[data-pu]').forEach(pu => {
@@ -189,10 +349,14 @@ searchInput.addEventListener('input', function() {
             if (wardVisible) acVisible = true;
         });
 
+        // If no wards (empty area council), check AC name
+        if (!ac.querySelectorAll('.ward-section').length && acName.includes(q)) {
+            acVisible = true;
+        }
+
         ac.classList.toggle('hidden', !acVisible);
         if (acVisible) {
             anyVisible = true;
-            // Auto-expand matching accordions when searching
             if (q) {
                 const collapse = ac.querySelector('.accordion-collapse');
                 if (collapse && !collapse.classList.contains('show')) {
@@ -200,6 +364,15 @@ searchInput.addEventListener('input', function() {
                 }
             }
         }
+    });
+
+    // Search other sections (Rivers, Kano, Chairmanship)
+    document.querySelectorAll('[data-searchable]').forEach(el => {
+        const text = el.dataset.searchable.toLowerCase();
+        const inner = el.textContent.toLowerCase();
+        const match = !q || text.includes(q) || inner.includes(q);
+        el.classList.toggle('hidden', !match);
+        if (match) anyVisible = true;
     });
 
     noResults.classList.toggle('hidden', anyVisible || !q);
