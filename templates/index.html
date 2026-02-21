@@ -98,6 +98,14 @@
                             {% if data.votes %}
                             <div class="small text-muted mt-1">{{ "{:,}".format(data.votes) }} votes</div>
                             {% endif %}
+                            {% if data.runner_up %}
+                            <hr class="my-1">
+                            <div class="small text-muted">
+                                Runner-up: {{ data.runner_up }}
+                                <span class="badge" style="background:{{ party_colors.get(data.runner_up_party, '#666') }};font-size:0.65rem;">{{ data.runner_up_party }}</span>
+                                {% if data.runner_up_votes %}{{ "{:,}".format(data.runner_up_votes) }}{% endif %}
+                            </div>
+                            {% endif %}
                             {% if data.note %}
                             <div class="small text-muted fst-italic">{{ data.note }}</div>
                             {% endif %}
