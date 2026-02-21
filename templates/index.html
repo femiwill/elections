@@ -1,174 +1,199 @@
 {% extends "base.html" %}
 
 {% block content %}
-<!-- Hero -->
+<!-- ═══════════════════════════════ HERO ═══════════════════════════════ -->
 <section class="hero">
     <div class="container">
-        <div class="d-flex justify-content-between align-items-start mb-3">
+        <div class="d-flex justify-content-between align-items-start">
             <div>
-                <span class="badge badge-date mb-2"><i class="bi bi-calendar-event me-1"></i>{{ info.date }}</span>
-                <h1 class="mt-2 mb-1">{{ info.title }}</h1>
-                <p class="mb-0 opacity-75">{{ info.description }}</p>
+                <span class="hero-badge">
+                    <span class="live-dot"></span>
+                    <i class="bi bi-calendar-event"></i> {{ info.date }}
+                </span>
+                <h1>Nigeria <span class="accent">Election Results</span></h1>
+                <p class="hero-sub mb-0">{{ info.description }}</p>
             </div>
-            <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">
+            <button class="theme-btn" onclick="toggleTheme()" title="Toggle dark mode">
                 <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
             </button>
         </div>
 
-        <!-- Search -->
-        <div class="search-box mt-4">
-            <i class="bi bi-search"></i>
-            <input type="text" id="searchInput" class="form-control form-control-lg"
-                   placeholder="Search by state, area council, ward, polling unit, or party..."
+        <div class="search-wrap">
+            <i class="bi bi-search s-icon"></i>
+            <input type="text" id="searchInput"
+                   placeholder="Search area council, ward, polling unit, party..."
                    autocomplete="off">
+            <div class="search-right">
+                <span class="s-count" id="searchCount"></span>
+                <button class="s-clear" id="searchClear" title="Clear"><i class="bi bi-x"></i></button>
+                <kbd id="searchHint">/</kbd>
+            </div>
         </div>
     </div>
 </section>
 
-<!-- Quick Nav -->
-<section class="py-3 bg-light">
+<!-- ═══════════════════════════════ STICKY NAV ═══════════════════════════════ -->
+<nav class="sticky-nav">
     <div class="container">
-        <div class="d-flex flex-wrap gap-2 justify-content-center">
-            <a href="#fct-section" class="btn btn-sm btn-outline-success fw-bold"><i class="bi bi-building me-1"></i>FCT Area Councils</a>
-            <a href="#chairmanship-section" class="btn btn-sm btn-outline-success fw-bold"><i class="bi bi-trophy me-1"></i>Chairmanship Winners</a>
-            <a href="#rivers-section" class="btn btn-sm btn-outline-danger fw-bold"><i class="bi bi-geo me-1"></i>Rivers By-Elections</a>
-            <a href="#kano-section" class="btn btn-sm btn-outline-warning fw-bold"><i class="bi bi-geo me-1"></i>Kano By-Elections</a>
+        <div class="nav-pills-row">
+            <a href="#chairmanship-section" class="nav-pill">
+                <span class="dot" style="background:var(--ng-green)"></span> Chairmanship Winners
+            </a>
+            <a href="#fct-section" class="nav-pill">
+                <span class="dot" style="background:var(--ng-green)"></span> FCT Polling Units
+            </a>
+            <a href="#rivers-section" class="nav-pill">
+                <span class="dot" style="background:#E3242B"></span> Rivers By-Elections
+            </a>
+            <a href="#kano-section" class="nav-pill">
+                <span class="dot" style="background:#FFD700"></span> Kano By-Elections
+            </a>
         </div>
     </div>
-</section>
+</nav>
 
-<!-- Stats -->
-<section class="py-4">
+<!-- ═══════════════════════════════ STATS ═══════════════════════════════ -->
+<section class="section-spacer">
     <div class="container">
-        <div class="row g-3">
-            <div class="col-6 col-md-3">
-                <div class="card stat-card shadow-sm h-100">
-                    <div class="card-body text-center">
-                        <div class="stat-number">3</div>
-                        <div class="stat-label">States/Territory</div>
-                    </div>
+        <div class="stats-grid reveal">
+            <div class="stat-card">
+                <div class="stat-icon" style="background:rgba(0,148,1,0.08);color:var(--ng-green);">
+                    <i class="bi bi-geo-alt"></i>
                 </div>
+                <div class="stat-number" data-count="3">0</div>
+                <div class="stat-label">States / Territory</div>
             </div>
-            <div class="col-6 col-md-3">
-                <div class="card stat-card shadow-sm h-100">
-                    <div class="card-body text-center">
-                        <div class="stat-number">{{ fct_total_units }}</div>
-                        <div class="stat-label">FCT Units Reported</div>
-                    </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background:rgba(0,102,179,0.08);color:#0066B3;">
+                    <i class="bi bi-box-seam"></i>
                 </div>
+                <div class="stat-number" data-count="{{ fct_total_units }}">0</div>
+                <div class="stat-label">FCT Units Reported</div>
             </div>
-            <div class="col-6 col-md-3">
-                <div class="card stat-card shadow-sm h-100">
-                    <div class="card-body text-center">
-                        <div class="stat-number">{{ "{:,}".format(fct_total_votes) }}</div>
-                        <div class="stat-label">FCT Votes Counted</div>
-                    </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background:rgba(128,0,128,0.08);color:#800080;">
+                    <i class="bi bi-people"></i>
                 </div>
+                <div class="stat-number" data-count="{{ '{:,}'.format(fct_total_votes) }}">0</div>
+                <div class="stat-label">FCT Votes Counted</div>
             </div>
-            <div class="col-6 col-md-3">
-                <div class="card stat-card shadow-sm h-100">
-                    <div class="card-body text-center">
-                        <div class="stat-number">10</div>
-                        <div class="stat-label">Seats Decided</div>
-                    </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background:rgba(255,215,0,0.12);color:#b8960f;">
+                    <i class="bi bi-trophy"></i>
                 </div>
+                <div class="stat-number" data-count="10">0</div>
+                <div class="stat-label">Seats Decided</div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- ═══════════════════════════════════════════════════════════════════ -->
-<!-- FCT CHAIRMANSHIP WINNERS -->
-<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- ═══════════════════════════════ CHAIRMANSHIP WINNERS ═══════════════════════════════ -->
 <section class="pb-4" id="chairmanship-section" data-searchable="chairmanship winners fct area council">
     <div class="container">
-        <div class="card shadow-sm" style="border-radius:12px;border-top:4px solid var(--ng-green);">
-            <div class="card-body">
-                <h5 class="card-title fw-bold mb-1"><i class="bi bi-trophy-fill me-2" style="color:var(--ng-green)"></i>FCT Chairmanship Winners (Declared by INEC)</h5>
-                <p class="text-muted small mb-3">{{ info.fct.summary }}</p>
-                <div class="row g-2">
-                    {% for ac, data in chairmanship_winners.items() %}
-                    <div class="col-md-4 col-lg-2" data-searchable="{{ ac }} {{ data.winner }} {{ data.party }}">
-                        <div class="card h-100 text-center p-3" style="border-radius:10px;border:2px solid {{ party_colors.get(data.party, '#666') }}20;">
-                            <div class="fw-bold mb-1" style="color:{{ party_colors.get(data.party, '#666') }};">{{ ac }}</div>
-                            <div class="small fw-semibold">{{ data.winner }}</div>
-                            <span class="badge mt-1" style="background:{{ party_colors.get(data.party, '#666') }};color:white;">
-                                {{ data.party }} <i class="bi bi-check-circle-fill"></i>
-                            </span>
-                            {% if data.votes %}
-                            <div class="small text-muted mt-1">{{ "{:,}".format(data.votes) }} votes</div>
-                            {% endif %}
-                            {% if data.runner_up %}
-                            <hr class="my-1">
-                            <div class="small text-muted">
-                                Runner-up: {{ data.runner_up }}
-                                <span class="badge" style="background:{{ party_colors.get(data.runner_up_party, '#666') }};font-size:0.65rem;">{{ data.runner_up_party }}</span>
-                                {% if data.runner_up_votes %}{{ "{:,}".format(data.runner_up_votes) }}{% endif %}
-                            </div>
-                            {% endif %}
-                            {% if data.note %}
-                            <div class="small text-muted fst-italic">{{ data.note }}</div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
+        <div class="section-head reveal">
+            <div class="icon-box" style="background:rgba(0,148,1,0.08);color:var(--ng-green);">
+                <i class="bi bi-trophy-fill"></i>
             </div>
+            <div>
+                <h4>FCT Chairmanship Winners</h4>
+                <p class="sub">{{ info.fct.summary }}</p>
+            </div>
+        </div>
+        <div class="winner-grid reveal">
+            {% for ac, data in chairmanship_winners.items() %}
+            <div class="winner-card" data-searchable="{{ ac }} {{ data.winner }} {{ data.party }}"
+                 style="--card-color:{{ party_colors.get(data.party, '#666') }};">
+                <div style="position:absolute;top:0;left:0;right:0;height:4px;background:{{ party_colors.get(data.party, '#666') }};"></div>
+                <div class="ac-label" style="color:{{ party_colors.get(data.party, '#666') }};">{{ ac }}</div>
+                <div class="name">{{ data.winner }}</div>
+                <span class="party-pill" style="background:{{ party_colors.get(data.party, '#666') }};">
+                    {{ data.party }} <i class="bi bi-check-circle-fill" style="font-size:0.65rem;"></i>
+                </span>
+                {% if data.votes %}
+                <div class="meta">{{ "{:,}".format(data.votes) }} votes</div>
+                {% endif %}
+                {% if data.runner_up %}
+                <div class="runner">
+                    Runner-up: {{ data.runner_up }}
+                    <span class="mini-badge" style="background:{{ party_colors.get(data.runner_up_party, '#666') }};">{{ data.runner_up_party }}</span>
+                    {% if data.runner_up_votes %}<br>{{ "{:,}".format(data.runner_up_votes) }} votes{% endif %}
+                </div>
+                {% endif %}
+                {% if data.note %}
+                <div class="meta" style="font-style:italic;">{{ data.note }}</div>
+                {% endif %}
+            </div>
+            {% endfor %}
         </div>
     </div>
 </section>
 
-<!-- FCT Party Totals -->
+<!-- ═══════════════════════════════ FCT PARTY TOTALS ═══════════════════════════════ -->
 <section class="pb-4">
     <div class="container">
-        <div class="card shadow-sm" style="border-radius:12px;">
-            <div class="card-body">
-                <h5 class="card-title fw-bold mb-3"><i class="bi bi-bar-chart-fill me-2" style="color:var(--ng-green)"></i>FCT Party Vote Totals (from reported polling units)</h5>
-                {% set max_votes = fct_sorted_parties[0][1] if fct_sorted_parties else 1 %}
-                {% for party, votes in fct_sorted_parties %}
-                <div class="d-flex align-items-center mb-2">
-                    <span class="fw-bold me-2" style="min-width:60px;">{{ party }}</span>
-                    <div class="flex-grow-1 me-2">
-                        <div class="progress" style="height:22px;border-radius:6px;">
-                            <div class="progress-bar" role="progressbar"
-                                 style="width:{{ (votes / max_votes * 100)|round(1) }}%;background:{{ party_colors.get(party, '#666') }};"
-                                 aria-valuenow="{{ votes }}">
-                            </div>
-                        </div>
-                    </div>
-                    <span class="fw-bold" style="min-width:60px;text-align:right;">{{ "{:,}".format(votes) }}</span>
+        <div class="chart-card reveal">
+            <div class="section-head" style="margin-bottom:1rem;">
+                <div class="icon-box" style="background:rgba(0,148,1,0.08);color:var(--ng-green);">
+                    <i class="bi bi-bar-chart-fill"></i>
                 </div>
-                {% endfor %}
+                <div>
+                    <h4>FCT Party Vote Totals</h4>
+                    <p class="sub">From {{ fct_total_units }} reported polling units</p>
+                </div>
             </div>
+            {% set max_votes = fct_sorted_parties[0][1] if fct_sorted_parties else 1 %}
+            {% for party, votes in fct_sorted_parties %}
+            <div class="bar-row">
+                <span class="bar-label">{{ party }}</span>
+                <div class="bar-track">
+                    <div class="bar-fill" data-width="{{ (votes / max_votes * 100)|round(1) }}%"
+                         style="background:{{ party_colors.get(party, '#666') }};">
+                        {% if votes / max_votes > 0.15 %}
+                        <span class="inner-text">{{ "{:,}".format(votes) }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <span class="bar-value">{{ "{:,}".format(votes) }}</span>
+            </div>
+            {% endfor %}
         </div>
     </div>
 </section>
 
-<!-- ═══════════════════════════════════════════════════════════════════ -->
-<!-- FCT POLLING UNIT RESULTS -->
-<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- ═══════════════════════════════ FCT POLLING UNIT RESULTS ═══════════════════════════════ -->
 <section class="pb-5" id="fct-section">
     <div class="container">
-        <h4 class="fw-bold mb-3"><i class="bi bi-geo-alt-fill me-2" style="color:var(--ng-green)"></i>FCT Polling Unit Results</h4>
-
-        <div id="noResults" class="no-results-msg hidden">
-            <i class="bi bi-search" style="font-size:2rem;"></i>
-            <p class="mt-2 mb-0">No results match your search.</p>
+        <div class="section-head reveal">
+            <div class="icon-box" style="background:rgba(0,148,1,0.08);color:var(--ng-green);">
+                <i class="bi bi-geo-alt-fill"></i>
+            </div>
+            <div>
+                <h4>FCT Polling Unit Results</h4>
+                <p class="sub">{{ info.fct.positions }} &middot; {{ "{:,}".format(info.fct.registered_voters) }} registered voters</p>
+            </div>
         </div>
 
-        <div class="accordion" id="resultsAccordion">
+        <div id="noResults" class="no-results-msg hidden">
+            <i class="bi bi-search"></i>
+            <p class="mt-2 mb-0 fw-semibold">No results match your search</p>
+            <p class="small mt-1">Try a different area council, ward, or party name</p>
+        </div>
+
+        <div class="accordion ac-accordion" id="resultsAccordion">
             {% for ac_name, wards in fct_results.items() %}
-            <div class="accordion-item mb-2 border-0 shadow-sm" style="border-radius:12px;overflow:hidden;" data-ac="{{ ac_name }}">
+            <div class="accordion-item reveal" data-ac="{{ ac_name }}">
                 <h2 class="accordion-header">
                     <button class="accordion-button {% if not loop.first %}collapsed{% endif %}" type="button"
                             data-bs-toggle="collapse" data-bs-target="#ac-{{ loop.index }}">
-                        <i class="bi bi-building me-2"></i>{{ ac_name }}
+                        <i class="bi bi-building"></i>
+                        <span>{{ ac_name }}</span>
                         {% set ward_count = wards|length %}
                         {% set unit_count = wards.values()|map('length')|sum %}
-                        <span class="badge bg-secondary ms-2">{{ ward_count }} ward{{ 's' if ward_count != 1 else '' }}, {{ unit_count }} unit{{ 's' if unit_count != 1 else '' }}</span>
+                        <span class="ac-badge">{{ ward_count }} ward{{ 's' if ward_count != 1 else '' }}, {{ unit_count }} unit{{ 's' if unit_count != 1 else '' }}</span>
                         {% if ac_name in chairmanship_winners %}
-                        <span class="badge ms-1" style="background:{{ party_colors.get(chairmanship_winners[ac_name].party, '#666') }};">
-                            Chair: {{ chairmanship_winners[ac_name].party }} <i class="bi bi-check-circle-fill"></i>
+                        <span class="party-win-tag" style="background:{{ party_colors.get(chairmanship_winners[ac_name].party, '#666') }};">
+                            <i class="bi bi-check-circle-fill" style="font-size:0.6rem;"></i> {{ chairmanship_winners[ac_name].party }}
                         </span>
                         {% endif %}
                     </button>
@@ -177,27 +202,38 @@
                      data-bs-parent="#resultsAccordion">
                     <div class="accordion-body">
                         {% if not wards %}
-                        <p class="text-muted mb-0"><i class="bi bi-hourglass-split me-1"></i>No polling unit data available yet. Chairmanship winner declared above.</p>
+                        <div class="note-box">
+                            <i class="bi bi-hourglass-split me-1"></i>
+                            No polling unit data available yet. Chairmanship winner declared above.
+                        </div>
                         {% endif %}
                         {% for ward_name, units in wards.items() %}
-                        <div class="ward-section" data-ward="{{ ward_name }}">
-                            <h6 class="fw-bold text-uppercase mb-3" style="color:var(--ng-green);">
-                                <i class="bi bi-pin-map me-1"></i>{{ ward_name }}
-                            </h6>
+                        <div class="ward-block" data-ward="{{ ward_name }}">
+                            <div class="ward-label">
+                                <div class="w-icon"><i class="bi bi-pin-map-fill"></i></div>
+                                <h6>{{ ward_name }}</h6>
+                            </div>
                             <div class="row g-2">
                                 {% for unit_name, parties in units.items() %}
-                                {% set max_party = parties|dictsort(by='value', reverse=true)|first %}
+                                {% set sorted_parties = parties|dictsort(by='value', reverse=true) %}
+                                {% set max_party = sorted_parties|first %}
+                                {% set max_vote = max_party[1] if max_party[1] > 0 else 1 %}
                                 <div class="col-md-6 col-lg-4" data-pu="{{ unit_name }}">
-                                    <div class="card pu-card p-3 h-100">
-                                        <div class="fw-semibold mb-2 small">{{ unit_name }}</div>
-                                        <div class="d-flex flex-wrap gap-1">
-                                            {% for party, votes in parties|dictsort(by='value', reverse=true) %}
-                                            <span class="party-badge {% if party == max_party[0] and max_party[1] > 0 %}winner{% endif %}"
-                                                  style="background:{{ party_colors.get(party, '#666') }};"
-                                                  data-party="{{ party }}">
-                                                {{ party }} {{ votes }}
-                                                {% if party == max_party[0] and max_party[1] > 0 %}<i class="bi bi-trophy-fill" style="font-size:0.7rem;"></i>{% endif %}
-                                            </span>
+                                    <div class="pu-card">
+                                        <div class="pu-name">{{ unit_name }}</div>
+                                        <div class="vote-bars">
+                                            {% for party, votes in sorted_parties %}
+                                            <div class="vb-row">
+                                                <span class="vb-party" data-party="{{ party }}">{{ party }}</span>
+                                                <div class="vb-track">
+                                                    <div class="vb-fill {% if party == max_party[0] and max_party[1] > 0 %}is-winner{% endif %}"
+                                                         data-width="{{ (votes / max_vote * 100)|round(1) if max_vote > 0 else 0 }}%"
+                                                         style="background:{{ party_colors.get(party, '#888') }};">
+                                                        <span>{{ votes }}</span>
+                                                    </div>
+                                                </div>
+                                                <span class="vb-count">{{ votes }}</span>
+                                            </div>
                                             {% endfor %}
                                         </div>
                                     </div>
@@ -214,63 +250,74 @@
     </div>
 </section>
 
-<!-- ═══════════════════════════════════════════════════════════════════ -->
-<!-- RIVERS STATE BY-ELECTIONS -->
-<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- ═══════════════════════════════ RIVERS BY-ELECTIONS ═══════════════════════════════ -->
 <section class="pb-5" id="rivers-section" data-searchable="rivers state by-election ahoada khana">
     <div class="container">
-        <h4 class="fw-bold mb-3"><i class="bi bi-geo-alt-fill me-2" style="color:#E3242B"></i>Rivers State Assembly By-Elections</h4>
-        <p class="text-muted mb-3">{{ info.rivers.summary }}</p>
+        <div class="section-head reveal">
+            <div class="icon-box" style="background:rgba(227,36,43,0.08);color:#E3242B;">
+                <i class="bi bi-geo-alt-fill"></i>
+            </div>
+            <div>
+                <h4>Rivers State Assembly By-Elections</h4>
+                <p class="sub">{{ info.rivers.summary }}</p>
+            </div>
+        </div>
         <div class="row g-3">
             {% for constituency, data in rivers.items() %}
-            <div class="col-md-6" data-searchable="{{ constituency }} {{ data.winner }} rivers {{ data.winner_party }}">
-                <div class="card shadow-sm h-100" style="border-radius:12px;border-top:4px solid #E3242B;">
-                    <div class="card-body">
-                        <h6 class="fw-bold">{{ constituency }}</h6>
-                        <p class="text-muted small mb-2">{{ data.type }}</p>
+            <div class="col-md-6 reveal" data-searchable="{{ constituency }} {{ data.winner }} rivers {{ data.winner_party }}">
+                <div class="bye-card">
+                    <div class="accent-bar" style="background:linear-gradient(90deg,#E3242B,#ff6b6b);"></div>
+                    <div class="inner">
+                        <div class="c-name">{{ constituency }}</div>
+                        <div class="c-type">{{ data.type }}</div>
 
-                        <!-- Winner -->
-                        <div class="d-flex align-items-center mb-3 p-2 rounded" style="background:#f0fff0;">
-                            <i class="bi bi-trophy-fill me-2" style="color:var(--ng-green);font-size:1.3rem;"></i>
+                        <div class="bye-winner" style="background:rgba(0,148,1,0.06);">
+                            <div class="trophy-circle" style="background:rgba(0,148,1,0.1);color:var(--ng-green);">
+                                <i class="bi bi-trophy-fill"></i>
+                            </div>
                             <div>
-                                <div class="fw-bold">{{ data.winner }}</div>
-                                <span class="badge" style="background:{{ party_colors.get(data.winner_party, '#666') }};">{{ data.winner_party }}</span>
+                                <div class="name">{{ data.winner }}</div>
+                                <span class="party-pill" style="background:{{ party_colors.get(data.winner_party, '#666') }};font-size:0.72rem;padding:0.2rem 0.65rem;border-radius:50px;color:white;font-weight:700;">
+                                    {{ data.winner_party }}
+                                </span>
                             </div>
                         </div>
 
-                        <!-- All results -->
                         {% for candidate, votes in data.results.items() %}
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                            <span class="small">{{ candidate }}</span>
-                            <span class="fw-bold">{{ "{:,}".format(votes) }}</span>
+                        <div class="result-line">
+                            <span class="r-candidate">{{ candidate }}</span>
+                            <span class="r-votes">{{ "{:,}".format(votes) }}</span>
                         </div>
                         {% endfor %}
 
                         {% if data.total_valid %}
-                        <hr class="my-2">
-                        <div class="d-flex justify-content-between small text-muted">
-                            <span>Total valid votes</span>
-                            <span class="fw-bold">{{ "{:,}".format(data.total_valid) }}</span>
-                        </div>
-                        {% endif %}
-                        {% if data.registered_voters %}
-                        <div class="d-flex justify-content-between small text-muted">
-                            <span>Registered voters</span>
-                            <span>{{ "{:,}".format(data.registered_voters) }}</span>
-                        </div>
-                        {% endif %}
-                        {% if data.rejected %}
-                        <div class="d-flex justify-content-between small text-muted">
-                            <span>Rejected ballots</span>
-                            <span>{{ data.rejected }}</span>
+                        <div style="border-top:1px solid var(--border-color);margin-top:0.5rem;padding-top:0.5rem;">
+                            <div class="meta-line">
+                                <span>Total valid votes</span>
+                                <span style="font-weight:700;">{{ "{:,}".format(data.total_valid) }}</span>
+                            </div>
+                            {% if data.registered_voters %}
+                            <div class="meta-line">
+                                <span>Registered voters</span>
+                                <span>{{ "{:,}".format(data.registered_voters) }}</span>
+                            </div>
+                            {% endif %}
+                            {% if data.rejected %}
+                            <div class="meta-line">
+                                <span>Rejected ballots</span>
+                                <span>{{ data.rejected }}</span>
+                            </div>
+                            {% endif %}
                         </div>
                         {% endif %}
 
                         {% if data.note %}
-                        <div class="mt-2 small text-muted fst-italic"><i class="bi bi-info-circle me-1"></i>{{ data.note }}</div>
+                        <div class="note-box"><i class="bi bi-info-circle me-1"></i>{{ data.note }}</div>
                         {% endif %}
                         {% if data.returning_officer %}
-                        <div class="mt-1 small text-muted">Returning Officer: {{ data.returning_officer }}</div>
+                        <div style="font-size:0.74rem;color:var(--text-tertiary);margin-top:0.5rem;">
+                            <i class="bi bi-person me-1"></i>Returning Officer: {{ data.returning_officer }}
+                        </div>
                         {% endif %}
                     </div>
                 </div>
@@ -280,38 +327,49 @@
     </div>
 </section>
 
-<!-- ═══════════════════════════════════════════════════════════════════ -->
-<!-- KANO STATE BY-ELECTIONS -->
-<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- ═══════════════════════════════ KANO BY-ELECTIONS ═══════════════════════════════ -->
 <section class="pb-5" id="kano-section" data-searchable="kano state by-election municipal ungogo">
     <div class="container">
-        <h4 class="fw-bold mb-3"><i class="bi bi-geo-alt-fill me-2" style="color:#FFD700"></i>Kano State Assembly By-Elections</h4>
-        <p class="text-muted mb-3">{{ info.kano.summary }}</p>
+        <div class="section-head reveal">
+            <div class="icon-box" style="background:rgba(255,215,0,0.1);color:#b8960f;">
+                <i class="bi bi-geo-alt-fill"></i>
+            </div>
+            <div>
+                <h4>Kano State Assembly By-Elections</h4>
+                <p class="sub">{{ info.kano.summary }}</p>
+            </div>
+        </div>
         <div class="row g-3">
             {% for constituency, data in kano.items() %}
-            <div class="col-md-6" data-searchable="{{ constituency }} kano {{ data.winner_party or '' }}">
-                <div class="card shadow-sm h-100" style="border-radius:12px;border-top:4px solid #FFD700;">
-                    <div class="card-body">
-                        <h6 class="fw-bold">{{ constituency }}</h6>
-                        <p class="text-muted small mb-2">{{ data.type }}</p>
+            <div class="col-md-6 reveal" data-searchable="{{ constituency }} kano {{ data.winner_party or '' }}">
+                <div class="bye-card">
+                    <div class="accent-bar" style="background:linear-gradient(90deg,#FFD700,#ffed4a);"></div>
+                    <div class="inner">
+                        <div class="c-name">{{ constituency }}</div>
+                        <div class="c-type">{{ data.type }}</div>
 
                         {% if data.winner %}
-                        <div class="d-flex align-items-center mb-3 p-2 rounded" style="background:#f0fff0;">
-                            <i class="bi bi-trophy-fill me-2" style="color:var(--ng-green);font-size:1.3rem;"></i>
+                        <div class="bye-winner" style="background:rgba(0,148,1,0.06);">
+                            <div class="trophy-circle" style="background:rgba(0,148,1,0.1);color:var(--ng-green);">
+                                <i class="bi bi-trophy-fill"></i>
+                            </div>
                             <div>
-                                <div class="fw-bold">{{ data.winner }}</div>
-                                <span class="badge" style="background:{{ party_colors.get(data.winner_party, '#666') }};">{{ data.winner_party }}</span>
+                                <div class="name">{{ data.winner }}</div>
+                                <span style="background:{{ party_colors.get(data.winner_party, '#666') }};font-size:0.72rem;padding:0.2rem 0.65rem;border-radius:50px;color:white;font-weight:700;display:inline-block;">
+                                    {{ data.winner_party }}
+                                </span>
                             </div>
                         </div>
                         {% else %}
-                        <div class="p-2 rounded mb-2" style="background:#fff8e1;">
-                            <i class="bi bi-hourglass-split me-1"></i>
-                            <span class="small fw-semibold">Results awaiting official declaration</span>
+                        <div style="margin:0.85rem 0;">
+                            <span class="pending-pill">
+                                <i class="bi bi-hourglass-split"></i> Results awaiting official declaration
+                            </span>
                         </div>
                         {% endif %}
 
                         {% if data.note %}
-                        <div class="small text-muted fst-italic"><i class="bi bi-info-circle me-1"></i>{{ data.note }}</div>
+                        <div class="note-box"><i class="bi bi-info-circle me-1"></i>{{ data.note }}</div>
                         {% endif %}
                     </div>
                 </div>
@@ -324,78 +382,106 @@
 
 {% block scripts %}
 <script>
-const searchInput = document.getElementById('searchInput');
-const noResults = document.getElementById('noResults');
+(function(){
+    const input = document.getElementById('searchInput');
+    const noResults = document.getElementById('noResults');
+    const clearBtn = document.getElementById('searchClear');
+    const hint = document.getElementById('searchHint');
+    const countEl = document.getElementById('searchCount');
 
-searchInput.addEventListener('input', function() {
-    const q = this.value.toLowerCase().trim();
-    let anyVisible = false;
+    function doSearch() {
+        const q = input.value.toLowerCase().trim();
+        let anyVisible = false;
+        let matchCount = 0;
 
-    // Search FCT accordion items
-    document.querySelectorAll('.accordion-item').forEach(ac => {
-        const acName = (ac.dataset.ac || '').toLowerCase();
-        let acVisible = false;
+        // Toggle clear/hint
+        clearBtn.classList.toggle('active', !!q);
+        hint.style.display = q ? 'none' : '';
+        countEl.classList.toggle('active', !!q);
 
-        ac.querySelectorAll('.ward-section').forEach(ward => {
-            const wardName = (ward.dataset.ward || '').toLowerCase();
-            let wardVisible = false;
+        // FCT accordion
+        document.querySelectorAll('.accordion-item').forEach(ac => {
+            const acName = (ac.dataset.ac || '').toLowerCase();
+            let acVisible = false;
 
-            ward.querySelectorAll('[data-pu]').forEach(pu => {
-                const puName = pu.dataset.pu.toLowerCase();
-                const parties = pu.querySelectorAll('[data-party]');
-                let partyMatch = false;
-                parties.forEach(p => {
-                    if (p.dataset.party.toLowerCase().includes(q)) partyMatch = true;
+            ac.querySelectorAll('.ward-block').forEach(ward => {
+                const wardName = (ward.dataset.ward || '').toLowerCase();
+                let wardVisible = false;
+
+                ward.querySelectorAll('[data-pu]').forEach(pu => {
+                    const puName = pu.dataset.pu.toLowerCase();
+                    let partyMatch = false;
+                    pu.querySelectorAll('[data-party]').forEach(p => {
+                        if (p.dataset.party.toLowerCase().includes(q)) partyMatch = true;
+                    });
+                    const match = !q || acName.includes(q) || wardName.includes(q) || puName.includes(q) || partyMatch;
+                    pu.classList.toggle('hidden', !match);
+                    if (match) { wardVisible = true; matchCount++; }
                 });
 
-                const match = !q || acName.includes(q) || wardName.includes(q) || puName.includes(q) || partyMatch;
-                pu.classList.toggle('hidden', !match);
-                if (match) wardVisible = true;
+                ward.classList.toggle('hidden', !wardVisible);
+                if (wardVisible) acVisible = true;
             });
 
-            ward.classList.toggle('hidden', !wardVisible);
-            if (wardVisible) acVisible = true;
-        });
+            if (!ac.querySelectorAll('.ward-block').length && acName.includes(q)) {
+                acVisible = true;
+            }
 
-        // If no wards (empty area council), check AC name
-        if (!ac.querySelectorAll('.ward-section').length && acName.includes(q)) {
-            acVisible = true;
-        }
-
-        ac.classList.toggle('hidden', !acVisible);
-        if (acVisible) {
-            anyVisible = true;
-            if (q) {
-                const collapse = ac.querySelector('.accordion-collapse');
-                if (collapse && !collapse.classList.contains('show')) {
-                    new bootstrap.Collapse(collapse, {toggle: true});
+            ac.classList.toggle('hidden', !acVisible);
+            if (acVisible) {
+                anyVisible = true;
+                if (q) {
+                    const col = ac.querySelector('.accordion-collapse');
+                    if (col && !col.classList.contains('show')) {
+                        new bootstrap.Collapse(col, {toggle: true});
+                    }
                 }
             }
-        }
-    });
+        });
 
-    // Search other sections (Rivers, Kano, Chairmanship)
-    document.querySelectorAll('[data-searchable]').forEach(el => {
-        const text = el.dataset.searchable.toLowerCase();
-        const inner = el.textContent.toLowerCase();
-        const match = !q || text.includes(q) || inner.includes(q);
-        el.classList.toggle('hidden', !match);
-        if (match) anyVisible = true;
-    });
+        // Other sections
+        document.querySelectorAll('[data-searchable]').forEach(el => {
+            const text = el.dataset.searchable.toLowerCase();
+            const inner = el.textContent.toLowerCase();
+            const match = !q || text.includes(q) || inner.includes(q);
+            el.classList.toggle('hidden', !match);
+            if (match) anyVisible = true;
+        });
 
-    noResults.classList.toggle('hidden', anyVisible || !q);
-});
-
-function toggleTheme() {
-    const html = document.documentElement;
-    const icon = document.getElementById('themeIcon');
-    if (html.getAttribute('data-bs-theme') === 'dark') {
-        html.setAttribute('data-bs-theme', 'light');
-        icon.className = 'bi bi-moon-stars-fill';
-    } else {
-        html.setAttribute('data-bs-theme', 'dark');
-        icon.className = 'bi bi-sun-fill';
+        noResults.classList.toggle('hidden', anyVisible || !q);
+        countEl.textContent = q ? matchCount + ' unit' + (matchCount !== 1 ? 's' : '') : '';
     }
-}
+
+    input.addEventListener('input', doSearch);
+    clearBtn.addEventListener('click', () => { input.value = ''; doSearch(); input.focus(); });
+
+    // Smooth scroll for nav pills
+    document.querySelectorAll('.nav-pill').forEach(pill => {
+        pill.addEventListener('click', e => {
+            e.preventDefault();
+            const target = document.querySelector(pill.getAttribute('href'));
+            if (target) {
+                const offset = document.querySelector('.sticky-nav').offsetHeight + 16;
+                const top = target.getBoundingClientRect().top + window.scrollY - offset;
+                window.scrollTo({top, behavior: 'smooth'});
+            }
+        });
+    });
+
+    // Active pill on scroll
+    const sections = ['chairmanship-section','fct-section','rivers-section','kano-section'];
+    const pills = document.querySelectorAll('.nav-pill');
+    window.addEventListener('scroll', () => {
+        const navH = document.querySelector('.sticky-nav').offsetHeight + 40;
+        let active = '';
+        sections.forEach(id => {
+            const el = document.getElementById(id);
+            if (el && el.getBoundingClientRect().top < navH + 80) active = id;
+        });
+        pills.forEach(p => {
+            p.classList.toggle('active', p.getAttribute('href') === '#' + active);
+        });
+    }, {passive:true});
+})();
 </script>
 {% endblock %}
