@@ -360,6 +360,13 @@
                                 </span>
                             </div>
                         </div>
+
+                        {% for candidate, votes in data.results.items() %}
+                        <div class="result-line">
+                            <span class="r-candidate">{{ candidate }}</span>
+                            <span class="r-votes">{{ "{:,}".format(votes) }}</span>
+                        </div>
+                        {% endfor %}
                         {% else %}
                         <div style="margin:0.85rem 0;">
                             <span class="pending-pill">
@@ -370,6 +377,11 @@
 
                         {% if data.note %}
                         <div class="note-box"><i class="bi bi-info-circle me-1"></i>{{ data.note }}</div>
+                        {% endif %}
+                        {% if data.returning_officer %}
+                        <div style="font-size:0.74rem;color:var(--text-tertiary);margin-top:0.5rem;">
+                            <i class="bi bi-person me-1"></i>Returning Officer: {{ data.returning_officer }}
+                        </div>
                         {% endif %}
                     </div>
                 </div>

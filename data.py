@@ -1,7 +1,8 @@
 """
 Nigeria Election Results — February 21, 2026
 FCT Area Council Elections + Rivers & Kano State By-Elections
-Data sourced from: INEC, Daily Post, Premium Times, Sahara Reporters, Politics Nigeria, TVC News, PM News, Idoma Voice, Channels TV
+Data sourced from: INEC, Premium Times, Daily Post, Daily Trust, Punch, Sahara Reporters,
+Politics Nigeria, TVC News, PM News, Idoma Voice, Channels TV, Blueprint, Freedom Online
 """
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -96,29 +97,69 @@ FCT_RESULTS = {
             "PU 008, Yangoji Primary School II (Councillorship)": {"PDP": 19, "APC": 13, "ADP": 2},
         },
     },
-    "Gwagwalada": {},
+    "Gwagwalada": {
+        "Gwagwalada Centre Ward": {
+            "Ward Collation (56 polling units)": {"PDP": 2388, "APC": 2338, "ADC": 250, "APGA": 199, "SDP": 67},
+        },
+        "Kutunku Ward": {
+            "Ward Collation (45 polling units)": {"APC": 2909, "PDP": 1957, "APGA": 198, "ADC": 154, "NNPP": 20},
+        },
+        "Staff Quarters Ward": {
+            "Ward Collation (43 polling units)": {"APC": 1537, "PDP": 1248, "ADC": 259, "APGA": 205, "SDP": 126},
+        },
+        "Ibwa Ward": {
+            "Ward Collation (22 polling units)": {"PDP": 2519, "APC": 1610, "APGA": 258, "ADC": 64, "ADP": 15},
+        },
+        "Dobi Ward": {
+            "Ward Collation (30 polling units)": {"APC": 3747, "PDP": 2407, "APGA": 115, "ADC": 57, "NNPP": 12},
+        },
+        "Paiko Ward": {
+            "Ward Collation (26 polling units)": {"PDP": 1966, "APC": 1619, "ADC": 130, "APGA": 99, "SDP": 68},
+        },
+        "Tungan Maje Ward": {
+            "Ward Collation (34 polling units)": {"PDP": 3101, "APC": 1118, "ADC": 108, "APGA": 85, "SDP": 21},
+        },
+        "Zuba Ward": {
+            "Ward Collation (30 polling units)": {"PDP": 2720, "APC": 526, "ADC": 107, "APGA": 22, "NNPP": 11},
+        },
+        "Ikwa Ward": {
+            "Ward Collation (20 polling units)": {"PDP": 2348, "APC": 664, "APGA": 147, "ADC": 42, "NNPP": 9},
+        },
+        "Gwako Ward": {
+            "Ward Collation (32 polling units)": {"APC": 1720, "PDP": 1511, "APGA": 359, "ADC": 165, "YPP": 96},
+        },
+    },
     "Abaji": {},
 }
 
 # Final Chairmanship Results (declared by INEC)
 FCT_CHAIRMANSHIP_WINNERS = {
     "AMAC": {
-        "winner": "Christopher Maikalangu", "party": "APC", "votes": None,
+        "winner": "Christopher Maikalangu", "party": "APC", "votes": 40295,
         "note": "Re-elected for 2nd term",
-        "runner_up": "Dr. Moses Paul", "runner_up_party": "ADC", "runner_up_votes": None,
+        "runner_up": "Moses Paul Ogidi", "runner_up_party": "ADC", "runner_up_votes": 12109,
+        "valid_votes": 62861, "rejected": 2336, "total_cast": 65197,
+        "registered_voters": 837338, "accredited": 65676,
     },
     "Bwari": {
-        "winner": "Musa Dikko", "party": "APC", "votes": 18066,
-        "runner_up": "Andrew Gwani Igu", "runner_up_party": "PDP", "runner_up_votes": 13279,
+        "winner": "Joshua Ishaku", "party": "APC", "votes": 18466,
+        "runner_up": "ADC candidate", "runner_up_party": "ADC", "runner_up_votes": 4254,
+        "note": "PDP candidate Julius Adamu withdrew; PDP backed APC",
     },
     "Kuje": {
         "winner": "Abdullahi D. Galadima", "party": "APC", "votes": 15175,
+        "runner_up": "PDP candidate", "runner_up_party": "PDP", "runner_up_votes": 13650,
     },
     "Kwali": {
-        "winner": "Joseph K. Shazin", "party": "APC", "votes": 15309,
+        "winner": "Daniel Nuhu", "party": "APC", "votes": 17032,
+        "runner_up": "Haruna Pai", "runner_up_party": "PDP", "runner_up_votes": 8575,
     },
     "Gwagwalada": {
-        "winner": "Danze Mustapha Adams", "party": "APGA", "votes": 15950,
+        "winner": "Mohammed Kasim", "party": "PDP", "votes": 22165,
+        "runner_up": "Yahaya Shehu", "runner_up_party": "APC", "runner_up_votes": 17788,
+        "valid_votes": 43960, "rejected": 1521,
+        "registered_voters": 207577, "accredited": 46294,
+        "returning_officer": "Prof. Philip Akpeni",
     },
     "Abaji": {
         "winner": "Abdulrahaman Ajayi", "party": "APC", "votes": 13515,
@@ -137,31 +178,36 @@ RIVERS_BYELECTIONS = {
         "returning_officer": "Prof. Rosemary Ogbo",
         "results": {
             "APC - Ukalikpe Napoleon": 3980,
+            "APN - Godstime Egor": 38,
             "AA - Ego Marvelous": 33,
+            "BP - Oseja Clifford": 11,
+            "NNPP - Ephraim Raphael Ede": 7,
+            "YPP - Ogide Samson Greatman": 7,
+            "ZLP - Kwodu Saturday Prosper": 6,
         },
         "winner": "Ukalikpe Napoleon",
         "winner_party": "APC",
-        "total_valid": 4013,
-        "note": "PDP, LP, ADC did not field candidates",
+        "total_valid": 4082,
+        "note": "PDP, LP, ADC did not field candidates. Replaces Edison Ehie who resigned.",
     },
     "Khana State Constituency II": {
         "type": "State House of Assembly By-Election",
         "date": "February 21, 2026",
         "returning_officer": "Prof. Angela Briggs",
         "results": {
-            "APC - Henrietta Bulabari": 7647,
+            "APC - Loolo Bulabari Henrietta": 7647,
             "ZLP": 47,
-            "AA": 46,
+            "AAC": 46,
             "NNPP": 37,
             "YPP": 23,
         },
-        "winner": "Henrietta Bulabari",
+        "winner": "Loolo Bulabari Henrietta",
         "winner_party": "APC",
         "registered_voters": 71914,
         "accredited": 7834,
         "total_valid": 7800,
         "rejected": 34,
-        "note": "PDP, LP, ADC not on ballot",
+        "note": "PDP, LP, ADC not on ballot. Replaces deceased Dinebari Loolo.",
     },
 }
 
@@ -173,28 +219,33 @@ KANO_BYELECTIONS = {
     "Kano Municipal State Constituency": {
         "type": "State House of Assembly By-Election",
         "date": "February 21, 2026",
-        "results": {},
-        "winner": None,
-        "winner_party": None,
+        "returning_officer": "Prof. Ibrahim Tajo Siraj",
+        "results": {
+            "APC - Aliyu Nabil Daneji": 7484,
+        },
+        "winner": "Aliyu Nabil Daneji",
+        "winner_party": "APC",
         "registered_voters": None,
-        "note": "NNPP, PDP, ADC excluded from ballot by INEC. APC candidate Nabil Sarki Aliyu "
-                "(son of deceased lawmaker Hon. Sarki Aliyu Daneji, who died Dec 24, 2025) contested. "
+        "note": "NNPP, PDP, ADC excluded from ballot by INEC. "
+                "Son of deceased lawmaker Hon. Sarki Aliyu Daneji (died Dec 24, 2025). "
+                "Originally nominated by NNPP before defecting to APC. "
                 "Low voter turnout attributed to Ramadan fasting. "
-                "9 parties cleared: Accord, ADP, APP, AAC, APC, APM, PRP, YPP, ZLP. "
-                "~535,000 registered voters across 1,014 polling units (both constituencies). "
-                "Results awaiting official declaration.",
+                "9 parties cleared: Accord, ADP, APP, AAC, APC, APM, PRP, YPP, ZLP.",
     },
     "Ungogo State Constituency": {
         "type": "State House of Assembly By-Election",
         "date": "February 21, 2026",
-        "results": {},
-        "winner": None,
-        "winner_party": None,
+        "returning_officer": "Prof. Ali Tijjani Abdullahi",
+        "results": {
+            "APC - Aminu Sa'ad Sa'ad": 8975,
+        },
+        "winner": "Aminu Sa'ad Sa'ad",
+        "winner_party": "APC",
         "registered_voters": None,
-        "note": "NNPP, PDP, ADC excluded from ballot. APC candidate Aminu Sa'ad "
-                "(son of deceased lawmaker Hon. Aminu Sa'adu Ungogo, who died Dec 24, 2025; "
-                "defected from NNPP) contested. Low voter turnout. "
-                "Results awaiting official declaration.",
+        "note": "NNPP, PDP, ADC excluded from ballot. "
+                "Son of deceased lawmaker Hon. Aminu Sa'adu Ungogo (died Dec 24, 2025). "
+                "Originally nominated by NNPP before defecting to APC. "
+                "Low voter turnout. 18 candidates from 9 parties across both constituencies.",
     },
 }
 
@@ -212,7 +263,7 @@ ELECTION_INFO = {
         "total_polling_units": 2822,
         "registered_voters": 1680315,
         "positions": "6 Chairmanship + 62 Councillorship seats",
-        "summary": "APC won 5 of 6 chairmanship seats. APGA won Gwagwalada.",
+        "summary": "APC won 5 of 6 chairmanship seats. PDP won Gwagwalada.",
     },
     "rivers": {
         "title": "Rivers State Assembly By-Elections",
@@ -222,7 +273,7 @@ ELECTION_INFO = {
     "kano": {
         "title": "Kano State Assembly By-Elections",
         "constituencies": 2,
-        "summary": "2 seats contested. NNPP/PDP/ADC excluded from ballot. Low turnout reported.",
+        "summary": "APC won both seats. NNPP/PDP/ADC excluded from ballot. Low turnout reported.",
     },
     "source_note": "Data from news reports. Official results declared by INEC.",
 }
@@ -245,4 +296,6 @@ PARTY_COLORS = {
     "APP": "#A0522D",
     "APM": "#6B8E23",
     "PRP": "#CD853F",
+    "APN": "#556B2F",
+    "BP": "#8B4513",
 }
