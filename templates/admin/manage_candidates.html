@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+{% from "macros.html" import flash_messages %}
+
+{% block title %}Manage Candidates — {{ election.name }}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumb-bar">
+    <div class="container">
+        <a href="/">Home</a>
+        <span class="separator"><i class="bi bi-chevron-right" style="font-size:0.7rem;"></i></span>
+        <a href="/admin">Admin</a>
+        <span class="separator"><i class="bi bi-chevron-right" style="font-size:0.7rem;"></i></span>
+        <span style="color:var(--text-secondary);font-weight:600;">Candidates — {{ election.name }}</span>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2><i class="bi bi-people me-2" style="color:var(--ng-green);"></i>Manage Candidates</h2>
+                <p style="font-size:0.82rem;color:var(--text-tertiary);margin:0;">{{ election.name }}</p>
+            </div>
+            <a href="/admin" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<section class="section-spacer">
+    <div class="container">
+        {{ flash_messages() }}
+
+        <!-- Existing Candidates -->
+        <div class="section-head reveal">
+            <div class="icon-box" style="background:rgba(0,102,179,0.08);color:#0066B3;">
+                <i class="bi bi-person-lines-fill"></i>
+            </div>
+            <div>
+                <h4>Existing Candidates</h4>
+                <p class="sub">{{ candidates|length }} candidate{{ 's' if candidates|length != 1 else '' }} registered</p>
+            </div>
+        </div>
+
+        {% if candidates %}
+        <div class="admin-table reveal mb-4">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-3">Name</th>
+                        <th>Party</th>
+                        <th>Election Type</th>
+                        <th>Geographic Scope</th>
+                        <th class="text-end pe-3">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for candidate in candidates %}
+                    <tr>
+                        <td class="ps-3" style="font-weight:600;">{{ candidate.name }}</td>
+                        <td>
+                            <span style="display:inline-flex;align-items:center;gap:4px;">
+                                <span style="width:10px;height:10px;border-radius:50%;background:{{ candidate.party.color or '#666' }};display:inline-block;"></span>
+                                {{ candidate.party.abbreviation }}
+                            </span>
+                        </td>
+                        <td style="font-size:0.82rem;color:var(--text-secondary);">{{ candidate.election_type.name }}</td>
+                        <td style="font-size:0.82rem;color:var(--text-tertiary);">
+                            {% if candidate.state_id %}
+                            State: {{ candidate.state.name if candidate.state else candidate.state_id }}
+                            {% elif candidate.lga_id %}
+                            LGA ID: {{ candidate.lga_id }}
+                            {% else %}
+                            National
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-3">
+                            <a href="/admin/candidates/{{ election.id }}/{{ candidate.id }}/delete"
+                               class="btn btn-sm" style="font-size:0.75rem;color:#dc3545;font-weight:600;"
+                               onclick="return confirm('Remove this candidate?');">
+                                <i class="bi bi-trash me-1"></i>Remove
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="no-results-msg reveal mb-4" style="padding:2rem;">
+            <i class="bi bi-person-x" style="font-size:1.5rem;"></i>
+            <p class="mt-2 mb-0 fw-semibold" style="font-size:0.88rem;">No candidates yet</p>
+            <p class="small mt-1">Add candidates using the form below.</p>
+        </div>
+        {% endif %}
+
+        <!-- Add Candidate Form -->
+        <div class="chart-card reveal">
+            <div class="section-head" style="margin-bottom:1rem;">
+                <div class="icon-box" style="background:rgba(0,148,1,0.08);color:var(--ng-green);">
+                    <i class="bi bi-person-plus-fill"></i>
+                </div>
+                <div>
+                    <h4>Add Candidate</h4>
+                    <p class="sub">Register a new candidate for this election</p>
+                </div>
+            </div>
+
+            <form method="post" action="/admin/candidates/{{ election.id }}/add" id="candidateForm">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label" style="font-weight:700;font-size:0.85rem;">Candidate Name <span style="color:#dc3545;">*</span></label>
+                        <input type="text" name="name" class="form-control" required placeholder="Full name"
+                               style="background:var(--surface-2);border-color:var(--border-color);color:var(--text-primary);">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" style="font-weight:700;font-size:0.85rem;">Party <span style="color:#dc3545;">*</span></label>
+                        <select name="party_id" class="form-select" required
+                                style="background:var(--surface-2);border-color:var(--border-color);color:var(--text-primary);">
+                            <option value="">Select party...</option>
+                            {% for party in parties %}
+                            <option value="{{ party.id }}">{{ party.abbreviation }} — {{ party.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" style="font-weight:700;font-size:0.85rem;">Election Type <span style="color:#dc3545;">*</span></label>
+                        <select name="election_type_id" id="electionTypeSelect" class="form-select" required
+                                style="background:var(--surface-2);border-color:var(--border-color);color:var(--text-primary);">
+                            <option value="">Select type...</option>
+                            {% for et in election_types %}
+                            <option value="{{ et.id }}" data-level="{{ et.level }}">{{ et.name }} ({{ et.level }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" style="font-weight:700;font-size:0.85rem;">State</label>
+                        <select name="state_id" id="stateSelect" class="form-select"
+                                style="background:var(--surface-2);border-color:var(--border-color);color:var(--text-primary);">
+                            <option value="">National / All States</option>
+                            {% for state in states %}
+                            <option value="{{ state.id }}" data-code="{{ state.code }}">{{ state.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6" id="lgaGroup" style="display:none;">
+                        <label class="form-label" style="font-weight:700;font-size:0.85rem;">LGA</label>
+                        <select name="lga_id" id="lgaSelect" class="form-select"
+                                style="background:var(--surface-2);border-color:var(--border-color);color:var(--text-primary);">
+                            <option value="">Select LGA...</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6" id="wardGroup" style="display:none;">
+                        <label class="form-label" style="font-weight:700;font-size:0.85rem;">Ward</label>
+                        <select name="ward_id" id="wardSelect" class="form-select"
+                                style="background:var(--surface-2);border-color:var(--border-color);color:var(--text-primary);">
+                            <option value="">Select Ward...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-ng">
+                        <i class="bi bi-plus-lg me-1"></i>Add Candidate
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+    const typeSelect = document.getElementById('electionTypeSelect');
+    const stateSelect = document.getElementById('stateSelect');
+    const lgaGroup = document.getElementById('lgaGroup');
+    const lgaSelect = document.getElementById('lgaSelect');
+    const wardGroup = document.getElementById('wardGroup');
+    const wardSelect = document.getElementById('wardSelect');
+
+    typeSelect.addEventListener('change', function() {
+        const opt = this.options[this.selectedIndex];
+        const level = opt.dataset.level || '';
+        lgaGroup.style.display = ['lga', 'ward'].includes(level) ? '' : 'none';
+        wardGroup.style.display = level === 'ward' ? '' : 'none';
+    });
+
+    stateSelect.addEventListener('change', function() {
+        const stateId = this.value;
+        lgaSelect.innerHTML = '<option value="">Loading...</option>';
+        wardSelect.innerHTML = '<option value="">Select Ward...</option>';
+        if (!stateId) {
+            lgaSelect.innerHTML = '<option value="">Select LGA...</option>';
+            return;
+        }
+        fetch('/admin/api/lgas?state_id=' + stateId)
+            .then(r => r.json())
+            .then(data => {
+                lgaSelect.innerHTML = '<option value="">Select LGA...</option>';
+                data.forEach(lga => {
+                    const o = document.createElement('option');
+                    o.value = lga.id;
+                    o.textContent = lga.name;
+                    lgaSelect.appendChild(o);
+                });
+            })
+            .catch(() => {
+                lgaSelect.innerHTML = '<option value="">Error loading LGAs</option>';
+            });
+    });
+
+    lgaSelect.addEventListener('change', function() {
+        const lgaId = this.value;
+        wardSelect.innerHTML = '<option value="">Loading...</option>';
+        if (!lgaId) {
+            wardSelect.innerHTML = '<option value="">Select Ward...</option>';
+            return;
+        }
+        fetch('/admin/api/wards?lga_id=' + lgaId)
+            .then(r => r.json())
+            .then(data => {
+                wardSelect.innerHTML = '<option value="">Select Ward...</option>';
+                data.forEach(w => {
+                    const o = document.createElement('option');
+                    o.value = w.id;
+                    o.textContent = w.name;
+                    wardSelect.appendChild(o);
+                });
+            })
+            .catch(() => {
+                wardSelect.innerHTML = '<option value="">Error loading Wards</option>';
+            });
+    });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,501 @@
+{% extends "base.html" %}
+{% from "macros.html" import flash_messages %}
+
+{% block title %}Enter Results — Admin{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumb-bar">
+    <div class="container">
+        <a href="/">Home</a>
+        <span class="separator"><i class="bi bi-chevron-right" style="font-size:0.7rem;"></i></span>
+        <a href="/admin">Admin</a>
+        <span class="separator"><i class="bi bi-chevron-right" style="font-size:0.7rem;"></i></span>
+        <span style="color:var(--text-secondary);font-weight:600;">Enter Results</span>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2><i class="bi bi-pencil-square me-2" style="color:var(--ng-green);"></i>Enter Results</h2>
+                <p style="font-size:0.82rem;color:var(--text-tertiary);margin:0;">Enter polling unit results using cascading selection</p>
+            </div>
+            <a href="/admin" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<section class="section-spacer">
+    <div class="container" style="max-width:800px;">
+        {{ flash_messages() }}
+
+        <div id="statusAlert" class="alert py-2 mb-3" style="display:none;font-size:0.85rem;"></div>
+
+        <!-- PU Progress Indicator -->
+        <div id="puProgress" class="mb-3" style="display:none;">
+            <div style="background:var(--surface-2);border:1px solid var(--border-color);border-radius:10px;padding:0.6rem 1rem;display:flex;align-items:center;justify-content:space-between;">
+                <div style="font-size:0.82rem;font-weight:600;color:var(--text-primary);">
+                    <i class="bi bi-box-seam me-1" style="color:var(--ng-green);"></i>
+                    PU <span id="puCurrentIdx">0</span> of <span id="puTotalCount">0</span>
+                    <span style="color:var(--text-tertiary);font-weight:400;margin-left:0.5rem;" id="puWardLabel"></span>
+                </div>
+                <div style="flex:1;max-width:200px;margin-left:1rem;">
+                    <div style="height:4px;background:var(--surface-3);border-radius:2px;overflow:hidden;">
+                        <div id="puProgressBar" style="height:100%;background:var(--ng-green);border-radius:2px;transition:width 0.3s;width:0%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cascading Selection -->
+        <div class="chart-card reveal mb-4">
+            <div class="section-head" style="margin-bottom:1rem;">
+                <div class="icon-box" style="background:rgba(0,102,179,0.08);color:#0066B3;">
+                    <i class="bi bi-geo-alt-fill"></i>
+                </div>
+                <div>
+                    <h4>Select Location</h4>
+                    <p class="sub">Drill down to a specific polling unit</p>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label" style="font-weight:700;font-size:0.85rem;">Election <span style="color:#dc3545;">*</span></label>
+                    <select id="electionSelect" class="form-select"
+                            style="background:var(--surface-2);border-color:var(--border-color);color:var(--text-primary);">
+                        <option value="">Select election...</option>
+                        {% for election in elections %}
+                        <option value="{{ election.id }}">{{ election.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" style="font-weight:700;font-size:0.85rem;">Election Type <span style="color:#dc3545;">*</span></label>
+                    <select id="typeSelect" class="form-select" disabled
+                            style="background:var(--surface-2);border-color:var(--border-color);color:var(--text-primary);">
+                        <option value="">Select type...</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" style="font-weight:700;font-size:0.85rem;">State <span style="color:#dc3545;">*</span></label>
+                    <select id="stateSelect" class="form-select" disabled
+                            style="background:var(--surface-2);border-color:var(--border-color);color:var(--text-primary);">
+                        <option value="">Select state...</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" style="font-weight:700;font-size:0.85rem;">LGA <span style="color:#dc3545;">*</span></label>
+                    <select id="lgaSelect" class="form-select" disabled
+                            style="background:var(--surface-2);border-color:var(--border-color);color:var(--text-primary);">
+                        <option value="">Select LGA...</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" style="font-weight:700;font-size:0.85rem;">Ward <span style="color:#dc3545;">*</span></label>
+                    <select id="wardSelect" class="form-select" disabled
+                            style="background:var(--surface-2);border-color:var(--border-color);color:var(--text-primary);">
+                        <option value="">Select ward...</option>
+                    </select>
+                </div>
+                <div class="col-12">
+                    <label class="form-label" style="font-weight:700;font-size:0.85rem;">Polling Unit <span style="color:#dc3545;">*</span></label>
+                    <select id="puSelect" class="form-select" disabled
+                            style="background:var(--surface-2);border-color:var(--border-color);color:var(--text-primary);">
+                        <option value="">Select polling unit...</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Existing Results Warning -->
+        <div id="existingWarning" class="mb-3" style="display:none;">
+            <div style="background:rgba(255,193,7,0.08);border:1px solid rgba(255,193,7,0.3);border-radius:10px;padding:0.75rem 1rem;">
+                <div style="font-size:0.85rem;font-weight:700;color:#b8860b;margin-bottom:0.4rem;">
+                    <i class="bi bi-exclamation-triangle me-1"></i> Results already exist for this polling unit
+                </div>
+                <div id="existingDetails" style="font-size:0.78rem;color:var(--text-secondary);"></div>
+                <div style="font-size:0.75rem;color:#b8860b;margin-top:0.4rem;">
+                    Saving will overwrite the existing results.
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Entry Form (shown after PU selected) -->
+        <div id="resultsForm" class="chart-card reveal" style="display:none;">
+            <div class="section-head" style="margin-bottom:1rem;">
+                <div class="icon-box" style="background:rgba(0,148,1,0.08);color:var(--ng-green);">
+                    <i class="bi bi-clipboard-data-fill"></i>
+                </div>
+                <div>
+                    <h4>Enter Vote Counts</h4>
+                    <p class="sub" id="puLabel">—</p>
+                </div>
+            </div>
+
+            <div id="candidateVotes">
+                <!-- Dynamically populated -->
+            </div>
+
+            <div class="d-flex gap-2 mt-3 flex-wrap">
+                <button type="button" id="saveBtn" class="btn btn-ng" onclick="saveResults(false)">
+                    <i class="bi bi-check-lg me-1"></i>Save Results
+                </button>
+                <button type="button" id="saveNextBtn" class="btn btn-ng" style="background:#0066B3;" onclick="saveResults(true)">
+                    <i class="bi bi-skip-forward-fill me-1"></i>Save &amp; Next PU
+                </button>
+                <button type="button" class="btn btn-outline-secondary" onclick="clearForm()">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i>Clear
+                </button>
+            </div>
+            <div style="font-size:0.72rem;color:var(--text-tertiary);margin-top:0.5rem;">
+                <i class="bi bi-keyboard me-1"></i>
+                <kbd>Tab</kbd> between fields &middot;
+                <kbd>Ctrl+Enter</kbd> save &middot;
+                <kbd>Ctrl+Shift+Enter</kbd> save &amp; next
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+    const electionSel = document.getElementById('electionSelect');
+    const typeSel = document.getElementById('typeSelect');
+    const stateSel = document.getElementById('stateSelect');
+    const lgaSel = document.getElementById('lgaSelect');
+    const wardSel = document.getElementById('wardSelect');
+    const puSel = document.getElementById('puSelect');
+    const resultsForm = document.getElementById('resultsForm');
+    const candidateVotes = document.getElementById('candidateVotes');
+    const puLabel = document.getElementById('puLabel');
+    const statusAlert = document.getElementById('statusAlert');
+    const existingWarning = document.getElementById('existingWarning');
+    const existingDetails = document.getElementById('existingDetails');
+    const puProgress = document.getElementById('puProgress');
+
+    function resetSelect(sel, msg) {
+        sel.innerHTML = '<option value="">' + msg + '</option>';
+        sel.disabled = true;
+    }
+
+    function showStatus(msg, type) {
+        statusAlert.style.display = '';
+        statusAlert.className = 'alert py-2 mb-3 alert-' + type;
+        statusAlert.innerHTML = '<i class="bi bi-' + (type === 'success' ? 'check-circle' : 'exclamation-triangle') + ' me-1"></i>' + msg;
+        if (type === 'success') {
+            setTimeout(() => { statusAlert.style.display = 'none'; }, 5000);
+        }
+    }
+
+    function loadOptions(sel, url, labelKey) {
+        sel.innerHTML = '<option value="">Loading...</option>';
+        sel.disabled = true;
+        return fetch(url)
+            .then(r => r.json())
+            .then(data => {
+                sel.innerHTML = '<option value="">Select...</option>';
+                data.forEach(item => {
+                    const o = document.createElement('option');
+                    o.value = item.id;
+                    o.textContent = item[labelKey] || item.name;
+                    if (item.level) o.dataset.level = item.level;
+                    sel.appendChild(o);
+                });
+                sel.disabled = false;
+                return data;
+            })
+            .catch(() => {
+                sel.innerHTML = '<option value="">Error loading data</option>';
+                return [];
+            });
+    }
+
+    /* ── PU progress tracking ── */
+    function updatePuProgress() {
+        const totalPus = puSel.options.length - 1; // minus "Select..." option
+        if (totalPus <= 0 || !puSel.value) {
+            puProgress.style.display = 'none';
+            return;
+        }
+        let currentIdx = 0;
+        for (let i = 1; i < puSel.options.length; i++) {
+            if (puSel.options[i].value === puSel.value) {
+                currentIdx = i;
+                break;
+            }
+        }
+        const wardName = wardSel.options[wardSel.selectedIndex]?.text || '';
+        document.getElementById('puCurrentIdx').textContent = currentIdx;
+        document.getElementById('puTotalCount').textContent = totalPus;
+        document.getElementById('puWardLabel').textContent = wardName ? 'in ' + wardName : '';
+        document.getElementById('puProgressBar').style.width = ((currentIdx / totalPus) * 100) + '%';
+        puProgress.style.display = '';
+    }
+
+    /* ── Check for existing results ── */
+    function checkExistingResults() {
+        existingWarning.style.display = 'none';
+        if (!typeSel.value || !puSel.value) return;
+
+        fetch('/api/admin/existing-results?election_type_id=' + typeSel.value + '&polling_unit_id=' + puSel.value)
+            .then(r => r.json())
+            .then(data => {
+                if (data.exists && data.results && data.results.length > 0) {
+                    const parts = data.results.map(r => {
+                        let text = r.party + ': ' + (r.votes || 0).toLocaleString();
+                        if (r.entered_at) text += ' (at ' + r.entered_at + ')';
+                        return text;
+                    });
+                    existingDetails.innerHTML = '<strong>Last entry:</strong> ' + parts.join(' &middot; ');
+                    existingWarning.style.display = '';
+                }
+            })
+            .catch(() => {});
+    }
+
+    /* ── Advance to next PU ── */
+    function advanceToNextPu() {
+        const currentPuId = puSel.value;
+        const wardId = wardSel.value;
+        if (!wardId || !currentPuId) return;
+
+        fetch('/api/admin/next-pu?ward_id=' + wardId + '&current_pu_id=' + currentPuId)
+            .then(r => r.json())
+            .then(data => {
+                if (data.next_pu) {
+                    puSel.value = data.next_pu.id;
+                    puSel.dispatchEvent(new Event('change'));
+                } else {
+                    showStatus('All polling units in this ward have been entered! Select a new ward to continue.', 'success');
+                    document.getElementById('saveNextBtn').disabled = true;
+                }
+            })
+            .catch(() => {
+                showStatus('Could not load next polling unit.', 'danger');
+            });
+    }
+
+    /* ── Cascading dropdowns ── */
+    electionSel.addEventListener('change', function() {
+        resetSelect(typeSel, 'Select type...');
+        resetSelect(stateSel, 'Select state...');
+        resetSelect(lgaSel, 'Select LGA...');
+        resetSelect(wardSel, 'Select ward...');
+        resetSelect(puSel, 'Select polling unit...');
+        resultsForm.style.display = 'none';
+        existingWarning.style.display = 'none';
+        puProgress.style.display = 'none';
+        if (this.value) {
+            loadOptions(typeSel, '/admin/api/election-types?election_id=' + this.value, 'name');
+        }
+    });
+
+    typeSel.addEventListener('change', function() {
+        resetSelect(stateSel, 'Select state...');
+        resetSelect(lgaSel, 'Select LGA...');
+        resetSelect(wardSel, 'Select ward...');
+        resetSelect(puSel, 'Select polling unit...');
+        resultsForm.style.display = 'none';
+        existingWarning.style.display = 'none';
+        puProgress.style.display = 'none';
+        if (this.value) {
+            loadOptions(stateSel, '/admin/api/states', 'name');
+        }
+    });
+
+    stateSel.addEventListener('change', function() {
+        resetSelect(lgaSel, 'Select LGA...');
+        resetSelect(wardSel, 'Select ward...');
+        resetSelect(puSel, 'Select polling unit...');
+        resultsForm.style.display = 'none';
+        existingWarning.style.display = 'none';
+        puProgress.style.display = 'none';
+        if (this.value) {
+            loadOptions(lgaSel, '/admin/api/lgas?state_id=' + this.value, 'name');
+        }
+    });
+
+    lgaSel.addEventListener('change', function() {
+        resetSelect(wardSel, 'Select ward...');
+        resetSelect(puSel, 'Select polling unit...');
+        resultsForm.style.display = 'none';
+        existingWarning.style.display = 'none';
+        puProgress.style.display = 'none';
+        if (this.value) {
+            loadOptions(wardSel, '/admin/api/wards?lga_id=' + this.value, 'name');
+        }
+    });
+
+    wardSel.addEventListener('change', function() {
+        resetSelect(puSel, 'Select polling unit...');
+        resultsForm.style.display = 'none';
+        existingWarning.style.display = 'none';
+        puProgress.style.display = 'none';
+        if (this.value) {
+            loadOptions(puSel, '/admin/api/polling-units?ward_id=' + this.value, 'name');
+        }
+    });
+
+    puSel.addEventListener('change', function() {
+        resultsForm.style.display = 'none';
+        existingWarning.style.display = 'none';
+        document.getElementById('saveNextBtn').disabled = false;
+        if (!this.value || !typeSel.value) {
+            puProgress.style.display = 'none';
+            return;
+        }
+
+        puLabel.textContent = puSel.options[puSel.selectedIndex].text;
+        updatePuProgress();
+        checkExistingResults();
+
+        fetch('/admin/api/candidates?election_type_id=' + typeSel.value +
+              '&state_id=' + stateSel.value +
+              '&lga_id=' + lgaSel.value)
+            .then(r => r.json())
+            .then(data => {
+                candidateVotes.innerHTML = '';
+                if (!data.length) {
+                    candidateVotes.innerHTML = '<div class="note-box"><i class="bi bi-info-circle me-1"></i>No candidates found for this election type and location. Please add candidates first.</div>';
+                    resultsForm.style.display = '';
+                    return;
+                }
+                data.forEach((c, idx) => {
+                    const row = document.createElement('div');
+                    row.className = 'row g-2 mb-2 align-items-center';
+                    row.innerHTML = `
+                        <div class="col-1 text-center">
+                            <span style="width:12px;height:12px;border-radius:50%;background:${c.party_color || '#666'};display:inline-block;"></span>
+                        </div>
+                        <div class="col-3">
+                            <span style="font-weight:700;font-size:0.82rem;">${c.party_abbr}</span>
+                            <div style="font-size:0.72rem;color:var(--text-tertiary);">${c.name}</div>
+                        </div>
+                        <div class="col-8">
+                            <input type="number" min="0" inputmode="numeric" pattern="[0-9]*"
+                                   class="form-control vote-input"
+                                   data-candidate-id="${c.id}" data-party-id="${c.party_id}"
+                                   placeholder="Votes" value="${c.existing_votes || ''}"
+                                   tabindex="${idx + 1}"
+                                   style="background:var(--surface-2);border-color:var(--border-color);color:var(--text-primary);font-weight:700;">
+                        </div>
+                    `;
+                    candidateVotes.appendChild(row);
+                });
+                resultsForm.style.display = '';
+
+                // Focus first vote input for keyboard-driven entry
+                const firstInput = candidateVotes.querySelector('.vote-input');
+                if (firstInput) setTimeout(() => firstInput.focus(), 100);
+            })
+            .catch(() => {
+                candidateVotes.innerHTML = '<div class="note-box"><i class="bi bi-exclamation-triangle me-1"></i>Error loading candidates.</div>';
+                resultsForm.style.display = '';
+            });
+    });
+
+    /* ── Save results ── */
+    window.saveResults = function(andAdvance) {
+        const inputs = candidateVotes.querySelectorAll('.vote-input');
+        const results = [];
+        let hasAnyVote = false;
+        inputs.forEach(inp => {
+            const votes = parseInt(inp.value) || 0;
+            if (votes > 0) hasAnyVote = true;
+            results.push({
+                candidate_id: parseInt(inp.dataset.candidateId),
+                party_id: parseInt(inp.dataset.partyId),
+                votes: votes
+            });
+        });
+
+        if (!hasAnyVote) {
+            showStatus('Please enter at least one vote count before saving.', 'danger');
+            return;
+        }
+
+        const payload = {
+            election_type_id: parseInt(typeSel.value),
+            polling_unit_id: parseInt(puSel.value),
+            ward_id: parseInt(wardSel.value),
+            lga_id: parseInt(lgaSel.value),
+            state_id: parseInt(stateSel.value),
+            results: results
+        };
+
+        const saveBtn = document.getElementById('saveBtn');
+        const saveNextBtn = document.getElementById('saveNextBtn');
+        saveBtn.disabled = true;
+        saveNextBtn.disabled = true;
+        const activeBtn = andAdvance ? saveNextBtn : saveBtn;
+        const origHtml = activeBtn.innerHTML;
+        activeBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving...';
+
+        fetch('/admin/results/save', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                showStatus('Results saved for ' + puLabel.textContent, 'success');
+                existingWarning.style.display = 'none';
+                if (andAdvance) {
+                    advanceToNextPu();
+                }
+            } else {
+                showStatus('Error: ' + (data.error || 'Unknown error'), 'danger');
+            }
+        })
+        .catch(err => {
+            showStatus('Network error: ' + err.message, 'danger');
+        })
+        .finally(() => {
+            saveBtn.disabled = false;
+            saveNextBtn.disabled = false;
+            activeBtn.innerHTML = origHtml;
+        });
+    };
+
+    window.clearForm = function() {
+        candidateVotes.querySelectorAll('.vote-input').forEach(inp => inp.value = '');
+        const firstInput = candidateVotes.querySelector('.vote-input');
+        if (firstInput) firstInput.focus();
+    };
+
+    /* ── Keyboard shortcuts ── */
+    document.addEventListener('keydown', function(e) {
+        // Ctrl+Enter = Save
+        if (e.ctrlKey && e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            if (resultsForm.style.display !== 'none') {
+                saveResults(false);
+            }
+        }
+        // Ctrl+Shift+Enter = Save & Next
+        if (e.ctrlKey && e.shiftKey && e.key === 'Enter') {
+            e.preventDefault();
+            if (resultsForm.style.display !== 'none') {
+                saveResults(true);
+            }
+        }
+    });
+
+    /* ── Prevent non-numeric input on vote fields ── */
+    document.addEventListener('input', function(e) {
+        if (e.target.classList.contains('vote-input')) {
+            e.target.value = e.target.value.replace(/[^0-9]/g, '');
+        }
+    });
+})();
+</script>
+{% endblock %}

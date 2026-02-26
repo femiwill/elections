@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+{% from "macros.html" import flash_messages %}
+
+{% block title %}Bulk Upload — Admin{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumb-bar">
+    <div class="container">
+        <a href="/">Home</a>
+        <span class="separator"><i class="bi bi-chevron-right" style="font-size:0.7rem;"></i></span>
+        <a href="/admin">Admin</a>
+        <span class="separator"><i class="bi bi-chevron-right" style="font-size:0.7rem;"></i></span>
+        <span style="color:var(--text-secondary);font-weight:600;">Bulk Upload</span>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2><i class="bi bi-cloud-upload me-2" style="color:var(--ng-green);"></i>Bulk Upload Results</h2>
+                <p style="font-size:0.82rem;color:var(--text-tertiary);margin:0;">Upload election results via CSV file</p>
+            </div>
+            <a href="/admin" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<section class="section-spacer">
+    <div class="container" style="max-width:800px;">
+        {{ flash_messages() }}
+
+        <div id="statusAlert" class="alert py-2 mb-3" style="display:none;font-size:0.85rem;"></div>
+
+        <!-- Upload Form -->
+        <div class="chart-card reveal mb-4">
+            <div class="section-head" style="margin-bottom:1rem;">
+                <div class="icon-box" style="background:rgba(0,148,1,0.08);color:var(--ng-green);">
+                    <i class="bi bi-file-earmark-spreadsheet-fill"></i>
+                </div>
+                <div>
+                    <h4>Upload CSV File</h4>
+                    <p class="sub">Select the election and type, then upload your CSV</p>
+                </div>
+            </div>
+
+            <form id="uploadForm" enctype="multipart/form-data">
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label" style="font-weight:700;font-size:0.85rem;">Election <span style="color:#dc3545;">*</span></label>
+                        <select name="election_id" id="electionSelect" class="form-select" required
+                                style="background:var(--surface-2);border-color:var(--border-color);color:var(--text-primary);">
+                            <option value="">Select election...</option>
+                            {% for election in elections %}
+                            <option value="{{ election.id }}">{{ election.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" style="font-weight:700;font-size:0.85rem;">Election Type <span style="color:#dc3545;">*</span></label>
+                        <select name="election_type_id" id="typeSelect" class="form-select" required disabled
+                                style="background:var(--surface-2);border-color:var(--border-color);color:var(--text-primary);">
+                            <option value="">Select type...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" style="font-weight:700;font-size:0.85rem;">CSV File <span style="color:#dc3545;">*</span></label>
+                    <input type="file" name="csv_file" id="csvFile" class="form-control" accept=".csv" required
+                           style="background:var(--surface-2);border-color:var(--border-color);color:var(--text-primary);">
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="button" id="previewBtn" class="btn btn-outline-secondary" onclick="previewCSV()" disabled>
+                        <i class="bi bi-eye me-1"></i>Preview
+                    </button>
+                    <button type="submit" id="uploadBtn" class="btn btn-ng" disabled>
+                        <i class="bi bi-cloud-upload me-1"></i>Upload & Process
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- CSV Format Instructions -->
+        <div class="chart-card reveal mb-4">
+            <div class="section-head" style="margin-bottom:1rem;">
+                <div class="icon-box" style="background:rgba(0,102,179,0.08);color:#0066B3;">
+                    <i class="bi bi-info-circle-fill"></i>
+                </div>
+                <div>
+                    <h4>CSV Format</h4>
+                    <p class="sub">Required columns and format for the upload file</p>
+                </div>
+            </div>
+
+            <div class="note-box mb-3" style="border-left-color:var(--ng-green);">
+                <strong>Required Columns:</strong>
+                <code style="font-size:0.78rem;">state, lga, ward, polling_unit, party, candidate_name, votes</code>
+            </div>
+
+            <div style="overflow-x:auto;">
+                <table class="table table-sm mb-0" style="font-size:0.78rem;">
+                    <thead>
+                        <tr style="background:var(--surface-2);">
+                            <th>Column</th>
+                            <th>Description</th>
+                            <th>Example</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="font-weight:700;">state</td>
+                            <td>State name (must match existing state)</td>
+                            <td style="color:var(--text-tertiary);">FCT</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight:700;">lga</td>
+                            <td>LGA name (must match existing LGA)</td>
+                            <td style="color:var(--text-tertiary);">Abuja Municipal</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight:700;">ward</td>
+                            <td>Ward name (must match existing ward)</td>
+                            <td style="color:var(--text-tertiary);">City Centre</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight:700;">polling_unit</td>
+                            <td>Polling unit name (must match existing PU)</td>
+                            <td style="color:var(--text-tertiary);">PU 001 - Primary School</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight:700;">party</td>
+                            <td>Party abbreviation</td>
+                            <td style="color:var(--text-tertiary);">APC</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight:700;">candidate_name</td>
+                            <td>Candidate full name</td>
+                            <td style="color:var(--text-tertiary);">John Doe</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight:700;">votes</td>
+                            <td>Number of votes (integer)</td>
+                            <td style="color:var(--text-tertiary);">1234</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="note-box mt-3">
+                <i class="bi bi-lightbulb me-1"></i>
+                <strong>Tips:</strong> State, LGA, Ward, and Polling Unit names must exactly match the entries in the database.
+                Party abbreviations must match registered parties. Duplicate entries (same PU + party) will be updated with the new vote count.
+            </div>
+        </div>
+
+        <!-- Preview Area -->
+        <div id="previewArea" class="chart-card reveal" style="display:none;">
+            <div class="section-head" style="margin-bottom:1rem;">
+                <div class="icon-box" style="background:rgba(255,215,0,0.12);color:#b8960f;">
+                    <i class="bi bi-table"></i>
+                </div>
+                <div>
+                    <h4>Preview</h4>
+                    <p class="sub" id="previewCount">—</p>
+                </div>
+            </div>
+            <div style="overflow-x:auto;max-height:400px;overflow-y:auto;">
+                <table class="table table-sm mb-0" id="previewTable" style="font-size:0.78rem;">
+                    <thead id="previewHead"></thead>
+                    <tbody id="previewBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+    const electionSel = document.getElementById('electionSelect');
+    const typeSel = document.getElementById('typeSelect');
+    const csvFile = document.getElementById('csvFile');
+    const previewBtn = document.getElementById('previewBtn');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const previewArea = document.getElementById('previewArea');
+    const statusAlert = document.getElementById('statusAlert');
+    const uploadForm = document.getElementById('uploadForm');
+
+    function showStatus(msg, type) {
+        statusAlert.style.display = '';
+        statusAlert.className = 'alert py-2 mb-3 alert-' + type;
+        statusAlert.innerHTML = '<i class="bi bi-' + (type === 'success' ? 'check-circle' : 'exclamation-triangle') + ' me-1"></i>' + msg;
+        if (type === 'success') setTimeout(() => { statusAlert.style.display = 'none'; }, 8000);
+    }
+
+    electionSel.addEventListener('change', function() {
+        typeSel.innerHTML = '<option value="">Loading...</option>';
+        typeSel.disabled = true;
+        uploadBtn.disabled = true;
+        if (!this.value) {
+            typeSel.innerHTML = '<option value="">Select type...</option>';
+            return;
+        }
+        fetch('/admin/api/election-types?election_id=' + this.value)
+            .then(r => r.json())
+            .then(data => {
+                typeSel.innerHTML = '<option value="">Select type...</option>';
+                data.forEach(t => {
+                    const o = document.createElement('option');
+                    o.value = t.id;
+                    o.textContent = t.name + ' (' + t.level + ')';
+                    typeSel.appendChild(o);
+                });
+                typeSel.disabled = false;
+            });
+    });
+
+    typeSel.addEventListener('change', updateButtons);
+    csvFile.addEventListener('change', updateButtons);
+
+    function updateButtons() {
+        const ready = electionSel.value && typeSel.value && csvFile.files.length;
+        previewBtn.disabled = !csvFile.files.length;
+        uploadBtn.disabled = !ready;
+    }
+
+    window.previewCSV = function() {
+        const file = csvFile.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const lines = e.target.result.split('\n').filter(l => l.trim());
+            if (lines.length < 2) {
+                showStatus('CSV file appears to be empty or has no data rows.', 'warning');
+                return;
+            }
+
+            const headers = lines[0].split(',').map(h => h.trim());
+            const previewHead = document.getElementById('previewHead');
+            const previewBody = document.getElementById('previewBody');
+
+            previewHead.innerHTML = '<tr>' + headers.map(h => '<th style="background:var(--surface-2);font-weight:700;">' + h + '</th>').join('') + '</tr>';
+
+            const maxRows = Math.min(lines.length - 1, 20);
+            let bodyHTML = '';
+            for (let i = 1; i <= maxRows; i++) {
+                const cols = lines[i].split(',').map(c => c.trim());
+                bodyHTML += '<tr>' + cols.map(c => '<td>' + c + '</td>').join('') + '</tr>';
+            }
+            previewBody.innerHTML = bodyHTML;
+
+            document.getElementById('previewCount').textContent = (lines.length - 1) + ' rows total, showing first ' + maxRows;
+            previewArea.style.display = '';
+        };
+        reader.readAsText(file);
+    };
+
+    uploadForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        uploadBtn.disabled = true;
+        uploadBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Processing...';
+
+        fetch('/admin/results/bulk-upload', {
+            method: 'POST',
+            body: formData
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                let msg = 'Upload successful! ' + data.processed + ' results processed.';
+                if (data.errors && data.errors.length) {
+                    msg += '<br><small>' + data.errors.length + ' errors encountered. See details below.</small>';
+                }
+                showStatus(msg, 'success');
+
+                if (data.errors && data.errors.length) {
+                    const errorList = data.errors.map(e => '<li>' + e + '</li>').join('');
+                    const errDiv = document.createElement('div');
+                    errDiv.className = 'note-box mt-3';
+                    errDiv.innerHTML = '<strong>Errors:</strong><ul class="mb-0 mt-1" style="font-size:0.78rem;">' + errorList + '</ul>';
+                    uploadForm.parentElement.appendChild(errDiv);
+                }
+            } else {
+                showStatus('Error: ' + (data.error || 'Unknown error'), 'danger');
+            }
+        })
+        .catch(err => {
+            showStatus('Network error: ' + err.message, 'danger');
+        })
+        .finally(() => {
+            uploadBtn.disabled = false;
+            uploadBtn.innerHTML = '<i class="bi bi-cloud-upload me-1"></i>Upload & Process';
+        });
+    });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,94 @@
+{% macro party_bar(party, votes, max_votes, color) %}
+<div class="vb-row">
+    <span class="vb-party">{{ party }}</span>
+    <div class="vb-track">
+        <div class="vb-fill {% if loop is defined and loop.first %}is-winner{% endif %}"
+             data-width="{{ (votes / max_votes * 100)|round(1) if max_votes > 0 else 0 }}%"
+             style="background:{{ color }};">
+            <span>{{ votes }}</span>
+        </div>
+    </div>
+    <span class="vb-count">{{ votes }}</span>
+</div>
+{% endmacro %}
+
+{% macro pu_card(pu_name, parties, party_colors) %}
+{# parties is a list of (party_abbr, votes) sorted desc #}
+{% set max_vote = parties[0][1] if parties and parties[0][1] > 0 else 1 %}
+<div class="pu-card">
+    <div class="pu-name">{{ pu_name }}</div>
+    <div class="vote-bars">
+        {% for party, votes in parties %}
+        <div class="vb-row">
+            <span class="vb-party">{{ party }}</span>
+            <div class="vb-track">
+                <div class="vb-fill {% if loop.first and votes > 0 %}is-winner{% endif %}"
+                     data-width="{{ (votes / max_vote * 100)|round(1) if max_vote > 0 else 0 }}%"
+                     style="background:{{ party_colors.get(party, '#888') }};">
+                    <span>{{ votes }}</span>
+                </div>
+            </div>
+            <span class="vb-count">{{ votes }}</span>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endmacro %}
+
+{% macro winner_card(name, party, votes, party_color, subtitle='', runner_up='', runner_up_party='', runner_up_votes=0, runner_up_color='#666', note='') %}
+<div class="winner-card" style="--card-color:{{ party_color }};">
+    <div style="position:absolute;top:0;left:0;right:0;height:4px;background:{{ party_color }};"></div>
+    <div class="ac-label" style="color:{{ party_color }};">{{ subtitle }}</div>
+    <div class="name">{{ name }}</div>
+    <span class="party-pill" style="background:{{ party_color }};">
+        {{ party }} <i class="bi bi-check-circle-fill" style="font-size:0.65rem;"></i>
+    </span>
+    {% if votes %}<div class="meta">{{ "{:,}".format(votes) }} votes</div>{% endif %}
+    {% if runner_up %}
+    <div class="runner">
+        Runner-up: {{ runner_up }}
+        <span class="mini-badge" style="background:{{ runner_up_color }};">{{ runner_up_party }}</span>
+        {% if runner_up_votes %}<br>{{ "{:,}".format(runner_up_votes) }} votes{% endif %}
+    </div>
+    {% endif %}
+    {% if note %}<div class="meta" style="font-style:italic;">{{ note }}</div>{% endif %}
+</div>
+{% endmacro %}
+
+{% macro status_badge(status) %}
+<span class="status-badge {{ status }}">
+    {% if status == 'ongoing' %}<span class="live-dot" style="width:6px;height:6px;border-radius:50%;background:#FF6B00;animation:pulse 2s ease-in-out infinite;"></span>{% endif %}
+    {% if status == 'completed' %}<i class="bi bi-check-circle-fill" style="font-size:0.65rem;"></i>{% endif %}
+    {% if status == 'upcoming' %}<i class="bi bi-clock" style="font-size:0.65rem;"></i>{% endif %}
+    {{ status|title }}
+</span>
+{% endmacro %}
+
+{% macro flash_messages() %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for cat, msg in messages %}
+<div class="alert alert-{{ 'danger' if cat == 'error' else cat }} py-2 mb-3" style="font-size:0.85rem;">
+    <i class="bi bi-{% if cat == 'success' %}check-circle{% elif cat == 'error' or cat == 'danger' %}exclamation-triangle{% else %}info-circle{% endif %} me-1"></i>
+    {{ msg }}
+</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
+{% endmacro %}
+
+{% macro breadcrumb(items) %}
+{# items is a list of (label, url) tuples; last item has url=None #}
+<div class="breadcrumb-bar">
+    <div class="container">
+        {% for label, url in items %}
+        {% if url %}
+        <a href="{{ url }}">{{ label }}</a>
+        <span class="separator"><i class="bi bi-chevron-right" style="font-size:0.7rem;"></i></span>
+        {% else %}
+        <span style="color:var(--text-secondary);font-weight:600;">{{ label }}</span>
+        {% endif %}
+        {% endfor %}
+    </div>
+</div>
+{% endmacro %}

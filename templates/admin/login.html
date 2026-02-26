@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Login — Nigeria Election Results{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width:400px;margin-top:5rem;">
+    <div class="card" style="background:var(--surface-1);border:1px solid var(--border-color);border-radius:var(--radius-lg);">
+        <div class="card-body p-4">
+            <div class="text-center mb-3">
+                <div style="width:50px;height:50px;border-radius:14px;background:rgba(0,148,1,0.08);color:var(--ng-green);display:inline-flex;align-items:center;justify-content:center;font-size:1.3rem;margin-bottom:0.5rem;">
+                    <i class="bi bi-shield-lock"></i>
+                </div>
+                <h4 style="font-weight:800;">Admin Login</h4>
+                <p style="font-size:0.82rem;color:var(--text-tertiary);margin:0;">Enter password to access the admin panel</p>
+            </div>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}{% for cat, msg in messages %}
+            <div class="alert alert-{{ 'danger' if cat == 'error' else cat }} py-2" style="font-size:0.85rem;">{{ msg }}</div>
+            {% endfor %}{% endif %}{% endwith %}
+            <form method="post">
+                <div class="mb-3">
+                    <label class="form-label" style="font-weight:600;font-size:0.85rem;">Password</label>
+                    <input type="password" name="password" class="form-control" required autofocus
+                           style="background:var(--surface-2);border-color:var(--border-color);color:var(--text-primary);">
+                </div>
+                <button type="submit" class="btn w-100 btn-ng" style="padding:0.65rem;">Login</button>
+            </form>
+            <div class="text-center mt-3">
+                <a href="/" style="font-size:0.8rem;color:var(--text-tertiary);text-decoration:none;">
+                    <i class="bi bi-arrow-left me-1"></i>Back to site
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

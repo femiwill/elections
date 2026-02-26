@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+{% from "macros.html" import winner_card, breadcrumb %}
+
+{% block title %}{{ state.name }} — {{ election.name }}{% endblock %}
+
+{% block breadcrumbs %}
+{{ breadcrumb([
+    ('Elections', url_for('index')),
+    (election.name, url_for('election_overview', slug=election.slug, type=current_type.slug)),
+    (state.name, None)
+]) }}
+{% endblock %}
+
+{% block content %}
+<section class="hero" style="padding:2rem 0 1.75rem;">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <span class="hero-badge">
+                        {% if election.status == 'ongoing' %}<span class="live-dot"></span>{% endif %}
+                        <i class="bi bi-geo-alt"></i> {{ current_type.name }}
+                    </span>
+                    {% if election.status == 'ongoing' %}
+                    <span class="live-badge"><span class="live-dot"></span> LIVE</span>
+                    {% endif %}
+                </div>
+                <h1>{{ state.name }}</h1>
+                <p class="hero-sub mb-0">{{ election.name }} — {{ current_type.name }} results</p>
+            </div>
+            <button class="theme-btn" onclick="toggleTheme()" title="Toggle dark mode">
+                <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- Reporting Progress -->
+{% if pct_reporting is defined %}
+<section class="pt-3 pb-2">
+    <div class="container">
+        <div class="reporting-bar reveal">
+            <div class="rbar-head">
+                <span class="rbar-label">
+                    <i class="bi bi-broadcast me-1"></i>
+                    {{ lgas_reporting }} of {{ total_lgas_in_state }} LGAs reporting
+                </span>
+                <span class="rbar-pct">{{ pct_reporting }}%</span>
+            </div>
+            <div class="rbar-track">
+                <div class="rbar-fill" style="width:{{ pct_reporting }}%;"></div>
+            </div>
+            <div class="rbar-detail">
+                {{ "{:,}".format(pus_reporting) }} of {{ "{:,}".format(total_pus) }} polling units reported
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Winner Declaration -->
+{% if collation and collation.winner %}
+<section class="section-spacer">
+    <div class="container">
+        <div class="section-head reveal">
+            <div class="icon-box" style="background:rgba(0,148,1,0.08);color:var(--ng-green);">
+                <i class="bi bi-trophy-fill"></i>
+            </div>
+            <div>
+                <h4>Declared Winner — {{ state.name }}</h4>
+                {% if collation.status == 'declared' %}
+                <p class="sub">Officially declared by INEC</p>
+                {% else %}
+                <p class="sub">Result status: {{ collation.status|title }}</p>
+                {% endif %}
+            </div>
+        </div>
+        <div class="winner-grid reveal" style="max-width:300px;">
+            {{ winner_card(
+                name=collation.winner.name,
+                party=collation.winner.party.abbreviation,
+                votes=collation.total_valid_votes or 0,
+                party_color=collation.winner.party.color or '#666',
+                subtitle=state.name,
+                note=collation.notes or ''
+            ) }}
+        </div>
+
+        {% if collation.total_valid_votes or collation.total_rejected or collation.total_registered %}
+        <div class="chart-card reveal mt-3" style="max-width:500px;">
+            <div class="d-flex flex-column gap-1" style="font-size:0.82rem;">
+                {% if collation.total_registered %}
+                <div class="d-flex justify-content-between"><span style="color:var(--text-tertiary);">Registered Voters</span><span style="font-weight:700;">{{ "{:,}".format(collation.total_registered) }}</span></div>
+                {% endif %}
+                {% if collation.total_accredited %}
+                <div class="d-flex justify-content-between"><span style="color:var(--text-tertiary);">Accredited Voters</span><span style="font-weight:700;">{{ "{:,}".format(collation.total_accredited) }}</span></div>
+                {% endif %}
+                {% if collation.total_valid_votes %}
+                <div class="d-flex justify-content-between"><span style="color:var(--text-tertiary);">Total Valid Votes</span><span style="font-weight:700;">{{ "{:,}".format(collation.total_valid_votes) }}</span></div>
+                {% endif %}
+                {% if collation.total_rejected %}
+                <div class="d-flex justify-content-between"><span style="color:var(--text-tertiary);">Rejected Ballots</span><span style="font-weight:700;">{{ "{:,}".format(collation.total_rejected) }}</span></div>
+                {% endif %}
+                {% if collation.returning_officer %}
+                <div class="d-flex justify-content-between"><span style="color:var(--text-tertiary);">Returning Officer</span><span style="font-weight:600;">{{ collation.returning_officer }}</span></div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endif %}
+
+<!-- Party Vote Breakdown Chart -->
+{% if party_totals %}
+<section class="pb-4">
+    <div class="container">
+        <div class="chart-card reveal">
+            <div class="section-head" style="margin-bottom:1rem;">
+                <div class="icon-box" style="background:rgba(0,148,1,0.08);color:var(--ng-green);">
+                    <i class="bi bi-bar-chart-fill"></i>
+                </div>
+                <div>
+                    <h4>Party Vote Totals — {{ state.name }}</h4>
+                    <p class="sub">Aggregated from LGA-level results</p>
+                </div>
+            </div>
+            {% set max_votes = party_totals[0][1] if party_totals else 1 %}
+            {% for party, votes in party_totals %}
+            <div class="bar-row">
+                <span class="bar-label">{{ party }}</span>
+                <div class="bar-track">
+                    <div class="bar-fill" data-width="{{ (votes / max_votes * 100)|round(1) }}%"
+                         style="background:{{ party_colors.get(party, '#666') }};">
+                        {% if votes / max_votes > 0.15 %}
+                        <span class="inner-text">{{ "{:,}".format(votes) }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <span class="bar-value">{{ "{:,}".format(votes) }}</span>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Share & Export -->
+        <div class="share-bar reveal mt-3">
+            <button class="share-btn wa" onclick="shareWhatsApp(buildShareText())">
+                <i class="bi bi-whatsapp"></i> WhatsApp
+            </button>
+            <button class="share-btn tw" onclick="shareTwitter(buildShareText())">
+                <i class="bi bi-twitter-x"></i> Post
+            </button>
+            <button class="share-btn" onclick="copyToClipboard(window.location.href)">
+                <i class="bi bi-link-45deg"></i> Copy Link
+            </button>
+            <a href="{{ url_for('export_csv_state', slug=election.slug, state_code=state.code, type=current_type.slug) }}" class="share-btn csv">
+                <i class="bi bi-download"></i> Download CSV
+            </a>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- LGA Grid -->
+<section class="pb-5">
+    <div class="container">
+        <div class="section-head reveal">
+            <div class="icon-box" style="background:rgba(0,102,179,0.08);color:#0066B3;">
+                <i class="bi bi-building"></i>
+            </div>
+            <div>
+                <h4>Local Government Areas</h4>
+                <p class="sub">Click an LGA to view ward-level results</p>
+            </div>
+        </div>
+
+        {% if lga_items %}
+        <div class="row g-3">
+            {% for item in lga_items %}
+            <div class="col-6 col-md-4 col-lg-3 reveal">
+                <a href="{{ url_for('lga_page', slug=election.slug, state_code=state.code, lga_id=item.lga.id, type=current_type.slug) }}" class="geo-card">
+                    {% if item.leading_color %}
+                    <div class="lead-bar" style="background:{{ item.leading_color }};"></div>
+                    {% else %}
+                    <div class="lead-bar" style="background:var(--surface-3);"></div>
+                    {% endif %}
+                    <div class="geo-name">{{ item.lga.name }}</div>
+                    {% if item.leading_party %}
+                    <div class="geo-meta">
+                        <span style="color:{{ item.leading_color or 'var(--text-tertiary)' }};font-weight:700;">{{ item.leading_party }}</span>
+                        leading
+                    </div>
+                    {% endif %}
+                    {% if item.total_votes %}
+                    <div class="geo-meta">{{ "{:,}".format(item.total_votes) }} votes</div>
+                    {% endif %}
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="no-results-msg reveal">
+            <i class="bi bi-inbox"></i>
+            <p class="mt-2 mb-0 fw-semibold">No LGA-level results yet</p>
+            <p class="small mt-1">Results will appear here as they are entered.</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function buildShareText() {
+    let text = '{{ state.name }} — {{ election.name }}';
+    {% if party_totals %}
+    const parts = [];
+    {% for party, votes in party_totals[:4] %}
+    parts.push('{{ party }}: {{ "{:,}".format(votes) }}');
+    {% endfor %}
+    if (parts.length) text += '\n' + parts.join(' | ');
+    {% endif %}
+    {% if pct_reporting is defined %}
+    text += '\n{{ pct_reporting }}% reporting';
+    {% endif %}
+    text += '\nTrack live:';
+    return text;
+}
+</script>
+{% endblock %}

@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+{% from "macros.html" import breadcrumb %}
+
+{% block title %}Search{% if query %}: {{ query }}{% endif %} — Nigeria Election Results{% endblock %}
+
+{% block breadcrumbs %}
+{{ breadcrumb([
+    ('Home', url_for('index')),
+    ('Search', None)
+]) }}
+{% endblock %}
+
+{% block content %}
+<section class="hero" style="padding:2rem 0 1.75rem;">
+    <div class="container">
+        <h1>Search <span class="accent">Results</span></h1>
+        <div class="search-wrap" style="margin-top:1rem;">
+            <i class="bi bi-search s-icon"></i>
+            <form action="/search" method="GET">
+                <input type="text" name="q" value="{{ query }}" placeholder="Search states, LGAs, wards, candidates..." autofocus>
+            </form>
+        </div>
+    </div>
+</section>
+
+<section class="section-spacer">
+    <div class="container">
+        {% if query %}
+        <p class="reveal" style="font-size:0.85rem;color:var(--text-tertiary);margin-bottom:1.5rem;">
+            {{ total }} result{{ 's' if total != 1 else '' }} for "<strong style="color:var(--text-primary);">{{ query }}</strong>"
+        </p>
+
+        <!-- Elections -->
+        {% if results.elections %}
+        <div class="reveal mb-4">
+            <div class="section-head">
+                <div class="icon-box" style="background:rgba(0,148,1,0.08);color:var(--ng-green);"><i class="bi bi-calendar-event"></i></div>
+                <div><h4>Elections</h4><p class="sub">{{ results.elections|length }} found</p></div>
+            </div>
+            <div class="row g-2">
+                {% for e in results.elections %}
+                <div class="col-md-6 col-lg-4">
+                    <a href="{{ url_for('election_overview', slug=e.slug) }}" class="geo-card">
+                        <div class="lead-bar" style="background:var(--ng-green);"></div>
+                        <div class="geo-name">{{ e.name }}</div>
+                        <div class="geo-meta">
+                            {{ e.status|title }}
+                            {% if e.election_date %} &middot; {{ e.election_date.strftime('%b %d, %Y') }}{% endif %}
+                        </div>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- States -->
+        {% if results.states %}
+        <div class="reveal mb-4">
+            <div class="section-head">
+                <div class="icon-box" style="background:rgba(0,102,179,0.08);color:#0066B3;"><i class="bi bi-geo-alt"></i></div>
+                <div><h4>States</h4><p class="sub">{{ results.states|length }} found</p></div>
+            </div>
+            <div class="row g-2">
+                {% for s in results.states %}
+                <div class="col-6 col-md-3">
+                    <a href="{{ url_for('state_browse', state_code=s.code) }}" class="geo-card text-center">
+                        <div class="geo-name">{{ s.name }}</div>
+                        <div class="geo-meta">{{ s.geo_zone }}</div>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- LGAs -->
+        {% if results.lgas %}
+        <div class="reveal mb-4">
+            <div class="section-head">
+                <div class="icon-box" style="background:rgba(128,0,128,0.08);color:#800080;"><i class="bi bi-building"></i></div>
+                <div><h4>Local Government Areas</h4><p class="sub">{{ results.lgas|length }} found</p></div>
+            </div>
+            <div class="row g-2">
+                {% for l in results.lgas %}
+                <div class="col-6 col-md-4 col-lg-3">
+                    <a href="{{ url_for('lga_browse', state_code=l.state.code, lga_id=l.id) }}" class="geo-card">
+                        <div class="geo-name">{{ l.name }}</div>
+                        <div class="geo-meta">{{ l.state.name }}</div>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Wards -->
+        {% if results.wards %}
+        <div class="reveal mb-4">
+            <div class="section-head">
+                <div class="icon-box" style="background:rgba(255,107,0,0.08);color:#FF6B00;"><i class="bi bi-pin-map"></i></div>
+                <div><h4>Wards</h4><p class="sub">{{ results.wards|length }} found</p></div>
+            </div>
+            <div class="row g-2">
+                {% for w in results.wards %}
+                <div class="col-6 col-md-4 col-lg-3">
+                    <div class="geo-card">
+                        <div class="geo-name">{{ w.name }}</div>
+                        <div class="geo-meta">{{ w.lga.name }}, {{ w.lga.state.name }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Polling Units -->
+        {% if results.polling_units %}
+        <div class="reveal mb-4">
+            <div class="section-head">
+                <div class="icon-box" style="background:rgba(0,148,1,0.08);color:var(--ng-green);"><i class="bi bi-box-seam"></i></div>
+                <div><h4>Polling Units</h4><p class="sub">{{ results.polling_units|length }} found</p></div>
+            </div>
+            <div class="row g-2">
+                {% for p in results.polling_units %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="geo-card">
+                        <div class="geo-name" style="font-size:0.82rem;">{{ p.name }}</div>
+                        {% if p.code %}<div class="geo-meta">Code: {{ p.code }}</div>{% endif %}
+                        <div class="geo-meta">{{ p.ward.name }}, {{ p.ward.lga.name }}, {{ p.ward.lga.state.name }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Candidates -->
+        {% if results.candidates %}
+        <div class="reveal mb-4">
+            <div class="section-head">
+                <div class="icon-box" style="background:rgba(255,215,0,0.12);color:#b8960f;"><i class="bi bi-person"></i></div>
+                <div><h4>Candidates</h4><p class="sub">{{ results.candidates|length }} found</p></div>
+            </div>
+            <div class="row g-2">
+                {% for c in results.candidates %}
+                <div class="col-md-6 col-lg-4">
+                    <a href="{{ url_for('election_overview', slug=c.election_type.election.slug) }}" class="geo-card">
+                        <div class="d-flex align-items-center gap-2">
+                            <span style="width:10px;height:10px;border-radius:50%;background:{{ c.party.color or '#666' }};flex-shrink:0;"></span>
+                            <div>
+                                <div class="geo-name" style="margin-bottom:0;">{{ c.name }}</div>
+                                <div class="geo-meta">{{ c.party.abbreviation }} &middot; {{ c.election_type.name }} &middot; {{ c.election_type.election.name }}</div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if total == 0 %}
+        <div class="no-results-msg reveal">
+            <i class="bi bi-search"></i>
+            <p class="mt-2 mb-0 fw-semibold">No results found</p>
+            <p class="small mt-1">Try a different search term or browse by state from the homepage.</p>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="no-results-msg reveal">
+            <i class="bi bi-search"></i>
+            <p class="mt-2 mb-0 fw-semibold">Search for anything</p>
+            <p class="small mt-1">Find states, LGAs, wards, polling units, candidates, or elections</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

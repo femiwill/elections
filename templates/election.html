@@ -1,0 +1,403 @@
+{% extends "base.html" %}
+{% from "macros.html" import status_badge, winner_card, breadcrumb %}
+
+{% block title %}{{ election.name }} — Nigeria Election Results{% endblock %}
+{% block og_title %}{{ election.name }} — Nigeria Election Results{% endblock %}
+{% block og_desc %}Track live results for {{ election.name }} across Nigeria{% endblock %}
+
+{% block breadcrumbs %}
+{{ breadcrumb([
+    ('Elections', url_for('index')),
+    (election.name, None)
+]) }}
+{% endblock %}
+
+{% block content %}
+<section class="hero" style="padding:2.5rem 0 2rem;">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <span class="hero-badge">
+                        {% if election.status == 'ongoing' %}<span class="live-dot"></span>{% endif %}
+                        <i class="bi bi-calendar-event"></i>
+                        {% if election.election_date %}{{ election.election_date.strftime('%B %d, %Y') }}{% else %}Election{% endif %}
+                    </span>
+                    {% if election.status == 'ongoing' %}
+                    <span class="live-badge"><span class="live-dot"></span> LIVE</span>
+                    {% endif %}
+                </div>
+                <h1>{{ election.name }}</h1>
+                {% if election.description %}
+                <p class="hero-sub mb-0">{{ election.description }}</p>
+                {% endif %}
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                {{ status_badge(election.status) }}
+                <button class="theme-btn" onclick="toggleTheme()" title="Toggle dark mode">
+                    <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Election Type Tabs -->
+{% if election_types|length > 1 %}
+<nav class="sticky-nav">
+    <div class="container">
+        <div class="nav-pills-row">
+            {% for et in election_types %}
+            <a href="?type={{ et.slug }}" class="nav-pill {% if current_type and current_type.id == et.id %}active{% endif %}">
+                <span class="dot" style="background:var(--ng-green);"></span>
+                {{ et.name }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</nav>
+{% endif %}
+
+{% if current_type %}
+
+<!-- ═══ National Summary Dashboard ═══ -->
+{% if national_summary %}
+<section class="section-spacer">
+    <div class="container">
+        <!-- Reporting Progress Bar -->
+        <div class="reporting-bar reveal mb-3" id="progressBar">
+            <div class="rbar-head">
+                <span class="rbar-label">
+                    <i class="bi bi-broadcast me-1"></i>
+                    {{ states_reporting }} of {{ total_states }} states reporting
+                </span>
+                <span class="rbar-pct">{{ national_pct_reporting }}%</span>
+            </div>
+            <div class="rbar-track">
+                <div class="rbar-fill" style="width:{{ national_pct_reporting }}%;"></div>
+            </div>
+            <div class="rbar-detail">
+                {{ "{:,}".format(total_pus_reporting) }} of {{ "{:,}".format(total_pus_all) }} polling units reported
+                {% if latest_result %}
+                &middot; <span class="last-updated" id="lastUpdated">
+                    <i class="bi bi-clock"></i> Last updated: {{ latest_result.strftime('%I:%M %p') }}
+                </span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- National Vote Tally Cards -->
+        <div class="section-head reveal">
+            <div class="icon-box" style="background:rgba(0,148,1,0.08);color:var(--ng-green);">
+                <i class="bi bi-bar-chart-fill"></i>
+            </div>
+            <div>
+                <h4>{{ current_type.name }} — National Summary</h4>
+                <p class="sub">{{ "{:,}".format(total_national_votes) }} total votes counted</p>
+            </div>
+        </div>
+
+        <div class="tally-grid reveal mb-3" id="tallyGrid">
+            {% for p in national_summary[:6] %}
+            <div class="tally-card">
+                <div style="position:absolute;top:0;left:0;right:0;height:4px;background:{{ p.color }};"></div>
+                <span class="tc-party" style="background:{{ p.color }};">{{ p.abbreviation }}</span>
+                <div class="tc-votes">{{ "{:,}".format(p.total_votes) }}</div>
+                <div class="tc-pct">
+                    {% if total_national_votes > 0 %}
+                    {{ (p.total_votes / total_national_votes * 100)|round(1) }}%
+                    {% else %}0%{% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Stacked Vote Share Bar -->
+        {% if total_national_votes > 0 %}
+        <div class="stacked-bar reveal" id="stackedBar">
+            {% for p in national_summary %}
+            {% set pct = (p.total_votes / total_national_votes * 100)|round(1) %}
+            <div class="sb-seg" style="width:{{ pct }}%;background:{{ p.color }};" title="{{ p.abbreviation }}: {{ "{:,}".format(p.total_votes) }} ({{ pct }}%)">
+                {% if pct > 5 %}<span>{{ p.abbreviation }} {{ pct }}%</span>{% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Share Buttons -->
+        <div class="share-bar reveal mt-3">
+            <button class="share-btn wa" onclick="shareWhatsApp(buildShareText())">
+                <i class="bi bi-whatsapp"></i> WhatsApp
+            </button>
+            <button class="share-btn tw" onclick="shareTwitter(buildShareText())">
+                <i class="bi bi-twitter-x"></i> Post
+            </button>
+            <button class="share-btn" onclick="copyToClipboard(window.location.href)">
+                <i class="bi bi-link-45deg"></i> Copy Link
+            </button>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Collation Results / Winner Cards -->
+{% if collation_results %}
+<section class="section-spacer">
+    <div class="container">
+        <div class="section-head reveal">
+            <div class="icon-box" style="background:rgba(0,148,1,0.08);color:var(--ng-green);">
+                <i class="bi bi-trophy-fill"></i>
+            </div>
+            <div>
+                <h4>{{ current_type.name }} — Declared Winners</h4>
+                <p class="sub">Official results as declared by INEC</p>
+            </div>
+        </div>
+        <div class="winner-grid reveal">
+            {% for cr in collation_results %}
+            {% if cr.winner %}
+            {{ winner_card(
+                name=cr.winner.name,
+                party=cr.winner.party.abbreviation,
+                votes=cr.total_valid_votes or 0,
+                party_color=cr.winner.party.color or '#666',
+                subtitle=cr.lga.name if cr.lga else (cr.state.name if cr.state else ''),
+                note=cr.notes or ''
+            ) }}
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- ═══ State-by-State Results Table / Grid ═══ -->
+{% if geo_items %}
+<section class="pb-5">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-start reveal">
+            <div class="section-head" style="margin-bottom:0;">
+                <div class="icon-box" style="background:rgba(0,102,179,0.08);color:#0066B3;">
+                    <i class="bi bi-geo-alt-fill"></i>
+                </div>
+                <div>
+                    <h4>
+                        {% if current_type.level in ('national', 'state') %}
+                        Results by State
+                        {% elif current_type.level in ('lga', 'constituency') %}
+                        Results by LGA
+                        {% else %}
+                        Results by Area
+                        {% endif %}
+                    </h4>
+                    <p class="sub">Click to drill down into detailed results</p>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="share-btn" id="viewGrid" onclick="toggleView('grid')" style="border-color:var(--ng-green);color:var(--ng-green);">
+                    <i class="bi bi-grid-3x3-gap"></i> Grid
+                </button>
+                <button class="share-btn" id="viewTable" onclick="toggleView('table')">
+                    <i class="bi bi-table"></i> Table
+                </button>
+            </div>
+        </div>
+
+        <!-- Grid View -->
+        <div class="row g-3 mt-2" id="geoGrid">
+            {% for item in geo_items %}
+            <div class="col-6 col-md-4 col-lg-3 reveal">
+                <a href="{{ item.url }}" class="geo-card">
+                    {% if item.leading_color %}
+                    <div class="lead-bar" style="background:{{ item.leading_color }};"></div>
+                    {% else %}
+                    <div class="lead-bar" style="background:var(--surface-3);"></div>
+                    {% endif %}
+                    <div class="geo-name">{{ item.name }}</div>
+                    {% if item.leading_party %}
+                    <div class="geo-meta">
+                        <span style="color:{{ item.leading_color or 'var(--text-tertiary)' }};font-weight:700;">{{ item.leading_party }}</span>
+                        leading
+                    </div>
+                    {% endif %}
+                    {% if item.total_votes %}
+                    <div class="geo-meta">{{ "{:,}".format(item.total_votes) }} votes</div>
+                    {% endif %}
+                    {% if item.pct_reporting is not none %}
+                    <div class="geo-meta" style="margin-top:0.2rem;">
+                        <div style="background:var(--surface-3);border-radius:3px;height:4px;overflow:hidden;margin-top:4px;">
+                            <div style="width:{{ item.pct_reporting }}%;height:100%;background:var(--ng-green);border-radius:3px;"></div>
+                        </div>
+                        <span style="font-size:0.7rem;">{{ item.pct_reporting }}% reporting</span>
+                    </div>
+                    {% endif %}
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Table View (hidden by default) -->
+        <div class="admin-table mt-2" id="geoTable" style="display:none;">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-3" style="cursor:pointer;" onclick="sortTable(0)">State <i class="bi bi-arrow-down-up" style="font-size:0.65rem;"></i></th>
+                        <th style="cursor:pointer;" onclick="sortTable(1)">Leading <i class="bi bi-arrow-down-up" style="font-size:0.65rem;"></i></th>
+                        <th style="cursor:pointer;" onclick="sortTable(2)">Votes <i class="bi bi-arrow-down-up" style="font-size:0.65rem;"></i></th>
+                        <th style="cursor:pointer;" onclick="sortTable(3)">% Reporting <i class="bi bi-arrow-down-up" style="font-size:0.65rem;"></i></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in geo_items %}
+                    <tr>
+                        <td class="ps-3">
+                            <a href="{{ item.url }}" style="color:var(--text-primary);text-decoration:none;font-weight:600;">
+                                {% if item.leading_color %}
+                                <span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:{{ item.leading_color }};margin-right:6px;"></span>
+                                {% endif %}
+                                {{ item.name }}
+                            </a>
+                        </td>
+                        <td>
+                            {% if item.leading_party %}
+                            <span style="font-weight:700;color:{{ item.leading_color or 'var(--text-secondary)' }};">{{ item.leading_party }}</span>
+                            {% else %}—{% endif %}
+                        </td>
+                        <td style="font-weight:700;font-variant-numeric:tabular-nums;" data-sort="{{ item.total_votes or 0 }}">
+                            {{ "{:,}".format(item.total_votes) if item.total_votes else '—' }}
+                        </td>
+                        <td data-sort="{{ item.pct_reporting or 0 }}">
+                            {% if item.pct_reporting is not none %}
+                            <div class="d-flex align-items-center gap-2">
+                                <div style="width:60px;height:4px;background:var(--surface-3);border-radius:2px;overflow:hidden;">
+                                    <div style="width:{{ item.pct_reporting }}%;height:100%;background:var(--ng-green);border-radius:2px;"></div>
+                                </div>
+                                <span style="font-size:0.78rem;font-weight:600;">{{ item.pct_reporting }}%</span>
+                            </div>
+                            {% else %}—{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% if not collation_results and not geo_items and not national_summary %}
+<section class="section-spacer">
+    <div class="container">
+        <div class="no-results-msg reveal">
+            <i class="bi bi-inbox"></i>
+            <p class="mt-2 mb-0 fw-semibold">No results available yet</p>
+            <p class="small mt-1">Results for {{ current_type.name }} will appear here as they are entered.</p>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% else %}
+<!-- No election types -->
+<section class="section-spacer">
+    <div class="container">
+        <div class="no-results-msg reveal">
+            <i class="bi bi-collection"></i>
+            <p class="mt-2 mb-0 fw-semibold">No election types configured</p>
+            <p class="small mt-1">An administrator needs to add election types to this election.</p>
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+/* ═══ View Toggle (Grid/Table) ═══ */
+function toggleView(view) {
+    const grid = document.getElementById('geoGrid');
+    const table = document.getElementById('geoTable');
+    const btnGrid = document.getElementById('viewGrid');
+    const btnTable = document.getElementById('viewTable');
+    if (!grid || !table) return;
+    if (view === 'table') {
+        grid.style.display = 'none';
+        table.style.display = '';
+        btnTable.style.borderColor = 'var(--ng-green)';
+        btnTable.style.color = 'var(--ng-green)';
+        btnGrid.style.borderColor = '';
+        btnGrid.style.color = '';
+    } else {
+        grid.style.display = '';
+        table.style.display = 'none';
+        btnGrid.style.borderColor = 'var(--ng-green)';
+        btnGrid.style.color = 'var(--ng-green)';
+        btnTable.style.borderColor = '';
+        btnTable.style.color = '';
+    }
+}
+
+/* ═══ Table Sort ═══ */
+let sortDir = {};
+function sortTable(col) {
+    const table = document.querySelector('#geoTable table');
+    if (!table) return;
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    sortDir[col] = !sortDir[col];
+    rows.sort((a, b) => {
+        let aVal = a.cells[col].dataset.sort || a.cells[col].textContent.trim();
+        let bVal = b.cells[col].dataset.sort || b.cells[col].textContent.trim();
+        const aNum = parseFloat(String(aVal).replace(/,/g, ''));
+        const bNum = parseFloat(String(bVal).replace(/,/g, ''));
+        if (!isNaN(aNum) && !isNaN(bNum)) {
+            return sortDir[col] ? aNum - bNum : bNum - aNum;
+        }
+        return sortDir[col] ? String(aVal).localeCompare(String(bVal)) : String(bVal).localeCompare(String(aVal));
+    });
+    rows.forEach(r => tbody.appendChild(r));
+}
+
+/* ═══ Build Share Text ═══ */
+function buildShareText() {
+    const parts = [];
+    {% if national_summary %}
+    {% for p in national_summary[:4] %}
+    parts.push('{{ p.abbreviation }}: {{ "{:,}".format(p.total_votes) }}{% if total_national_votes > 0 %} ({{ (p.total_votes / total_national_votes * 100)|round(1) }}%){% endif %}');
+    {% endfor %}
+    {% endif %}
+    let text = '{{ election.name }}';
+    if (parts.length) text += '\n' + parts.join(' | ');
+    text += '\n{{ national_pct_reporting|default(0) }}% reporting';
+    text += '\nTrack live:';
+    return text;
+}
+
+{% if election.status == 'ongoing' %}
+/* ═══ Auto-refresh for ongoing elections ═══ */
+(function() {
+    let prevPUs = {{ total_pus_reporting|default(0) }};
+    setInterval(function() {
+        fetch('/api/election/{{ election.slug }}/live?type={{ current_type.slug if current_type else "" }}')
+            .then(r => r.json())
+            .then(data => {
+                // Update last-updated timestamp
+                const tsEl = document.getElementById('lastUpdated');
+                if (tsEl && data.last_updated) {
+                    const d = new Date(data.last_updated);
+                    tsEl.innerHTML = '<i class="bi bi-clock"></i> Last updated: ' + d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+                }
+
+                // Toast if new PUs reported
+                if (data.pus_reporting > prevPUs) {
+                    const diff = data.pus_reporting - prevPUs;
+                    showToast(diff + ' new polling unit' + (diff > 1 ? 's' : '') + ' reported');
+                    prevPUs = data.pus_reporting;
+                }
+            })
+            .catch(() => {});
+    }, 30000);
+})();
+{% endif %}
+</script>
+{% endblock %}

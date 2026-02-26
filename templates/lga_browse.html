@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% from "macros.html" import breadcrumb %}
+
+{% block title %}{{ lga.name }} — {{ state.name }}{% endblock %}
+
+{% block breadcrumbs %}
+{{ breadcrumb([
+    ('Elections', url_for('index')),
+    (state.name, url_for('state_browse', state_code=state.code)),
+    (lga.name, None)
+]) }}
+{% endblock %}
+
+{% block content %}
+<section class="hero" style="padding:2rem 0 1.75rem;">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <span class="hero-badge">
+                    <i class="bi bi-building"></i> {{ state.name }}
+                </span>
+                <h1>{{ lga.name }}</h1>
+                <p class="hero-sub mb-0">Local Government Area</p>
+            </div>
+            <button class="theme-btn" onclick="toggleTheme()" title="Toggle dark mode">
+                <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- Stats -->
+<section class="section-spacer">
+    <div class="container">
+        {% set total_pus = ward_data|map(attribute='polling_units')|map('length')|sum %}
+        <div class="stats-grid reveal" style="grid-template-columns: repeat(2, 1fr); max-width:400px;">
+            <div class="stat-card">
+                <div class="stat-icon" style="background:rgba(0,148,1,0.08);color:var(--ng-green);"><i class="bi bi-pin-map"></i></div>
+                <div class="stat-number" data-count="{{ ward_data|length }}">0</div>
+                <div class="stat-label">Wards</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background:rgba(0,102,179,0.08);color:#0066B3;"><i class="bi bi-box-seam"></i></div>
+                <div class="stat-number" data-count="{{ '{:,}'.format(total_pus) }}">0</div>
+                <div class="stat-label">Polling Units</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Wards & Polling Units -->
+<section class="pb-5">
+    <div class="container">
+        <div class="section-head reveal">
+            <div class="icon-box" style="background:rgba(0,148,1,0.08);color:var(--ng-green);"><i class="bi bi-pin-map-fill"></i></div>
+            <div>
+                <h4>Wards & Polling Units</h4>
+                <p class="sub">{{ ward_data|length }} ward{{ 's' if ward_data|length != 1 else '' }} in {{ lga.name }}</p>
+            </div>
+        </div>
+
+        {% if ward_data %}
+        <div class="accordion ac-accordion" id="wardAccordion">
+            {% for item in ward_data %}
+            <div class="accordion-item reveal">
+                <h2 class="accordion-header">
+                    <button class="accordion-button {% if not loop.first %}collapsed{% endif %}" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#ward-{{ loop.index }}">
+                        <i class="bi bi-pin-map-fill"></i>
+                        <span>{{ item.ward.name }}</span>
+                        <span class="ac-badge">{{ item.polling_units|length }} PU{{ 's' if item.polling_units|length != 1 else '' }}</span>
+                    </button>
+                </h2>
+                <div id="ward-{{ loop.index }}" class="accordion-collapse collapse {% if loop.first %}show{% endif %}"
+                     data-bs-parent="#wardAccordion">
+                    <div class="accordion-body">
+                        {% if item.polling_units %}
+                        <div class="row g-2">
+                            {% for pu in item.polling_units %}
+                            <div class="col-md-6 col-lg-4">
+                                <div class="pu-card">
+                                    <div class="pu-name">
+                                        <i class="bi bi-box-seam me-1" style="color:var(--ng-green);font-size:0.7rem;"></i>
+                                        {{ pu.name }}
+                                    </div>
+                                    {% if pu.code %}
+                                    <div style="font-size:0.72rem;color:var(--text-tertiary);font-weight:500;">
+                                        Code: {{ pu.code }}
+                                    </div>
+                                    {% endif %}
+                                    {% if pu.registered_voters %}
+                                    <div style="font-size:0.72rem;color:var(--text-tertiary);">
+                                        {{ "{:,}".format(pu.registered_voters) }} registered voters
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="note-box">
+                            <i class="bi bi-info-circle me-1"></i>
+                            No polling units registered for this ward yet.
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="no-results-msg reveal">
+            <i class="bi bi-inbox"></i>
+            <p class="mt-2 mb-0 fw-semibold">No wards registered yet</p>
+            <p class="small mt-1">Ward and polling unit data will appear here once populated.</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

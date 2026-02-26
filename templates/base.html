@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ info.title }}</title>
-    <meta name="description" content="{{ info.description }}">
+    <title>{% block title %}Nigeria Election Results{% endblock %}</title>
+    <meta name="description" content="Track election results from across Nigeria">
     <meta name="theme-color" content="#009401">
-    <meta property="og:title" content="{{ info.title }}">
-    <meta property="og:description" content="{{ info.description }}">
+    <meta property="og:title" content="{% block og_title %}Nigeria Election Results{% endblock %}">
+    <meta property="og:description" content="{% block og_desc %}Track election results from across Nigeria{% endblock %}">
     <meta property="og:type" content="website">
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -65,7 +65,143 @@
             transition: background var(--transition), color var(--transition);
             -webkit-font-smoothing: antialiased;
             overflow-x: hidden;
+            padding-bottom: 0;
         }
+        @media (max-width: 768px) {
+            body { padding-bottom: 60px; }
+        }
+
+        /* ═══ Top Navbar ═══ */
+        .top-navbar {
+            background: var(--ng-dark);
+            padding: 0.5rem 0;
+            font-size: 0.82rem;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            position: relative;
+            z-index: 200;
+        }
+        .top-navbar .brand-link {
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            font-weight: 800;
+            font-size: 0.88rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        .top-navbar .brand-link:hover { color: white; }
+        .top-navbar .brand-link .ng-flag {
+            display: inline-flex;
+            gap: 1px;
+        }
+        .top-navbar .brand-link .ng-flag span {
+            width: 4px;
+            height: 14px;
+            display: inline-block;
+        }
+        .top-navbar .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .top-navbar .nav-links a {
+            color: rgba(255,255,255,0.5);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.78rem;
+            transition: color var(--transition);
+        }
+        .top-navbar .nav-links a:hover { color: rgba(255,255,255,0.9); }
+        .top-navbar .nav-links a.active { color: var(--ng-green-light); }
+        @media (max-width: 768px) {
+            .top-navbar .nav-links .desktop-only { display: none; }
+        }
+
+        /* ═══ Navbar Search ═══ */
+        .nav-search {
+            position: relative;
+            flex: 1;
+            max-width: 340px;
+            margin: 0 1rem;
+        }
+        .nav-search input {
+            width: 100%;
+            padding: 0.4rem 2rem 0.4rem 2.2rem;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 50px;
+            background: rgba(255,255,255,0.06);
+            color: white;
+            font-size: 0.78rem;
+            font-weight: 500;
+            transition: all var(--transition);
+        }
+        .nav-search input::placeholder { color: rgba(255,255,255,0.3); }
+        .nav-search input:focus {
+            outline: none;
+            border-color: var(--ng-green);
+            background: rgba(255,255,255,0.1);
+            box-shadow: 0 0 0 3px rgba(0,148,1,0.15);
+        }
+        .nav-search .ns-icon {
+            position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%);
+            color: rgba(255,255,255,0.3); font-size: 0.85rem; pointer-events: none;
+        }
+        .nav-search .ns-kbd {
+            position: absolute; right: 0.65rem; top: 50%; transform: translateY(-50%);
+            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 4px; padding: 1px 5px; font-size: 0.6rem;
+            color: rgba(255,255,255,0.3); font-family: inherit; pointer-events: none;
+        }
+
+        /* ═══ Autocomplete Dropdown ═══ */
+        .ac-dropdown {
+            position: absolute; top: 100%; left: 0; right: 0;
+            margin-top: 4px;
+            background: var(--surface-1);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow-lg);
+            z-index: 1000;
+            max-height: 400px;
+            overflow-y: auto;
+            display: none;
+        }
+        .ac-dropdown.show { display: block; }
+        .ac-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 0.6rem 0.85rem;
+            text-decoration: none; color: var(--text-primary);
+            transition: background var(--transition);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .ac-item:last-child { border-bottom: none; }
+        .ac-item:hover, .ac-item.active { background: var(--surface-2); }
+        .ac-item .ac-icon {
+            width: 32px; height: 32px; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.85rem; flex-shrink: 0;
+            background: rgba(0,148,1,0.08); color: var(--ng-green);
+        }
+        .ac-item .ac-text .ac-label { font-weight: 600; font-size: 0.82rem; }
+        .ac-item .ac-text .ac-sub { font-size: 0.7rem; color: var(--text-tertiary); }
+        .ac-item .ac-type {
+            margin-left: auto; font-size: 0.65rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.5px;
+            color: var(--text-tertiary); flex-shrink: 0;
+        }
+        .ac-footer {
+            padding: 0.5rem 0.85rem; text-align: center;
+            font-size: 0.75rem; color: var(--ng-green); font-weight: 600;
+            border-top: 1px solid var(--border-color);
+        }
+        .ac-footer:hover { background: var(--surface-2); }
+
+        /* ═══ Breadcrumbs ═══ */
+        .breadcrumb-bar { background: var(--surface-1); border-bottom: 1px solid var(--border-color); padding: 0.6rem 0; font-size: 0.82rem; }
+        .breadcrumb-bar a { color: var(--ng-green); text-decoration: none; font-weight: 500; }
+        .breadcrumb-bar a:hover { text-decoration: underline; }
+        .breadcrumb-bar .separator { color: var(--text-tertiary); margin: 0 0.4rem; }
 
         /* ═══ Scroll Reveal ═══ */
         .reveal {
@@ -197,6 +333,88 @@
         }
         .s-clear:hover { background: rgba(255,255,255,0.22); }
         .s-clear.active { display: flex; }
+
+        /* ═══ LIVE Badge ═══ */
+        .live-badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 0.2rem 0.65rem; border-radius: 50px;
+            background: rgba(0,230,118,0.15); color: #00e676;
+            font-size: 0.7rem; font-weight: 800;
+            letter-spacing: 0.8px; text-transform: uppercase;
+        }
+        .live-badge .live-dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: #00e676;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        /* ═══ Progress Bar ═══ */
+        .reporting-bar {
+            background: var(--surface-1);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 0.75rem 1rem;
+        }
+        .reporting-bar .rbar-head {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 0.4rem;
+        }
+        .reporting-bar .rbar-label { font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); }
+        .reporting-bar .rbar-pct { font-size: 0.85rem; font-weight: 800; color: var(--ng-green); }
+        .reporting-bar .rbar-track {
+            height: 6px; background: var(--surface-3); border-radius: 3px;
+            overflow: hidden;
+        }
+        .reporting-bar .rbar-fill {
+            height: 100%; border-radius: 3px;
+            background: linear-gradient(90deg, var(--ng-green), var(--ng-green-light));
+            transition: width 1s cubic-bezier(0.16,1,0.3,1);
+        }
+        .reporting-bar .rbar-detail {
+            font-size: 0.7rem; color: var(--text-tertiary);
+            margin-top: 0.3rem;
+        }
+
+        /* ═══ National Tally Cards ═══ */
+        .tally-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.6rem;
+        }
+        .tally-card {
+            background: var(--surface-1); border: 1px solid var(--border-color);
+            border-radius: var(--radius-md); padding: 1rem 0.85rem;
+            text-align: center; position: relative; overflow: hidden;
+            transition: all var(--transition);
+        }
+        .tally-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+        }
+        .tally-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        .tally-card .tc-party {
+            font-weight: 800; font-size: 0.82rem;
+            padding: 0.15rem 0.6rem; border-radius: 50px;
+            color: white; display: inline-block; margin-bottom: 0.3rem;
+        }
+        .tally-card .tc-votes {
+            font-weight: 900; font-size: 1.5rem; letter-spacing: -0.5px;
+            line-height: 1.2; margin-bottom: 0.15rem;
+        }
+        .tally-card .tc-pct {
+            font-size: 0.82rem; font-weight: 700; color: var(--text-secondary);
+        }
+
+        /* ═══ Stacked Bar ═══ */
+        .stacked-bar {
+            height: 32px; border-radius: 6px; overflow: hidden;
+            display: flex; background: var(--surface-3);
+        }
+        .stacked-bar .sb-seg {
+            display: flex; align-items: center; justify-content: center;
+            min-width: 2px;
+            transition: width 1s cubic-bezier(0.16,1,0.3,1);
+        }
+        .stacked-bar .sb-seg span {
+            font-size: 0.6rem; font-weight: 800; color: white; white-space: nowrap;
+        }
 
         /* ═══ Sticky Nav ═══ */
         .sticky-nav {
@@ -441,6 +659,22 @@
             font-variant-numeric: tabular-nums;
         }
 
+        /* ═══ Election Cards (Homepage) ═══ */
+        .election-card { background: var(--surface-1); border: 1px solid var(--border-color); border-radius: var(--radius-lg); overflow: hidden; transition: all var(--transition); }
+        .election-card:hover { box-shadow: var(--shadow-md); transform: translateY(-3px); }
+        .election-card .card-accent { height: 4px; background: linear-gradient(90deg, var(--ng-green), var(--ng-green-light)); }
+        .status-badge { display: inline-flex; align-items: center; gap: 4px; padding: 0.25rem 0.7rem; border-radius: 50px; font-size: 0.72rem; font-weight: 700; }
+        .status-badge.completed { background: rgba(0,148,1,0.1); color: var(--ng-green); }
+        .status-badge.ongoing { background: rgba(255,107,0,0.1); color: #FF6B00; }
+        .status-badge.upcoming { background: rgba(0,102,179,0.1); color: #0066B3; }
+
+        /* ═══ Geo Cards (State/LGA grid) ═══ */
+        .geo-card { background: var(--surface-1); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1rem; transition: all var(--transition); text-decoration: none; color: inherit; display: block; min-height: 48px; }
+        .geo-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); border-color: var(--ng-green); }
+        .geo-card .lead-bar { height: 4px; border-radius: 2px; margin-bottom: 0.6rem; }
+        .geo-card .geo-name { font-weight: 700; font-size: 0.88rem; margin-bottom: 0.3rem; }
+        .geo-card .geo-meta { font-size: 0.75rem; color: var(--text-tertiary); }
+
         /* ═══ By-Election Cards ═══ */
         .bye-card {
             background: var(--surface-1);
@@ -492,6 +726,81 @@
             background: linear-gradient(135deg, #3d3000, #4a3a00); color: #ffd54f;
         }
 
+        /* ═══ Share Buttons ═══ */
+        .share-bar {
+            display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+        }
+        .share-btn {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 0.35rem 0.75rem; border-radius: 50px;
+            font-size: 0.72rem; font-weight: 600;
+            border: 1px solid var(--border-color);
+            background: var(--surface-1); color: var(--text-secondary);
+            cursor: pointer; text-decoration: none;
+            transition: all var(--transition);
+        }
+        .share-btn:hover { border-color: var(--ng-green); color: var(--ng-green); transform: translateY(-1px); }
+        .share-btn.wa { color: #25D366; border-color: rgba(37,211,102,0.3); }
+        .share-btn.wa:hover { background: rgba(37,211,102,0.08); }
+        .share-btn.tw { color: #1DA1F2; border-color: rgba(29,161,242,0.3); }
+        .share-btn.tw:hover { background: rgba(29,161,242,0.08); }
+        .share-btn.csv { color: #6c757d; }
+        .share-btn.csv:hover { color: var(--ng-green); }
+
+        /* ═══ Toast ═══ */
+        .app-toast {
+            position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px);
+            background: var(--ng-dark); color: white;
+            padding: 0.6rem 1.2rem; border-radius: 50px;
+            font-size: 0.78rem; font-weight: 600;
+            box-shadow: var(--shadow-lg);
+            z-index: 2000;
+            opacity: 0; pointer-events: none;
+            transition: all 0.3s ease;
+        }
+        .app-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
+
+        /* ═══ Offline Banner ═══ */
+        .offline-banner {
+            position: fixed; top: 0; left: 0; right: 0;
+            background: #dc3545; color: white;
+            text-align: center; padding: 0.4rem;
+            font-size: 0.78rem; font-weight: 700;
+            z-index: 9999;
+            display: none;
+        }
+        .offline-banner.show { display: block; }
+
+        /* ═══ Bottom Nav (Mobile) ═══ */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: var(--surface-1);
+            border-top: 1px solid var(--border-color);
+            display: none;
+            z-index: 150;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
+        }
+        @media (max-width: 768px) {
+            .bottom-nav { display: flex; }
+        }
+        .bottom-nav a {
+            flex: 1; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: 0.45rem 0;
+            text-decoration: none; color: var(--text-tertiary);
+            font-size: 0.62rem; font-weight: 600;
+            transition: color var(--transition);
+            min-height: 52px;
+        }
+        .bottom-nav a i { font-size: 1.15rem; margin-bottom: 2px; }
+        .bottom-nav a.active, .bottom-nav a:hover { color: var(--ng-green); }
+
+        /* ═══ Last Updated ═══ */
+        .last-updated {
+            display: inline-flex; align-items: center; gap: 5px;
+            font-size: 0.72rem; color: var(--text-tertiary); font-weight: 500;
+        }
+
         /* ═══ Footer ═══ */
         .site-footer {
             background: var(--ng-dark); color: rgba(255,255,255,0.45);
@@ -512,6 +821,9 @@
         }
         .btt.visible { opacity: 1; transform: translateY(0); }
         .btt:hover { background: var(--ng-green-dark); transform: translateY(-2px); }
+        @media (max-width: 768px) {
+            .btt { bottom: 70px; }
+        }
 
         /* ═══ Theme Toggle ═══ */
         .theme-btn {
@@ -532,6 +844,41 @@
         }
         .no-results-msg i { font-size: 2.5rem; opacity: 0.25; }
 
+        /* ═══ Admin Styles ═══ */
+        .admin-header {
+            background: var(--surface-1);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.5rem 0;
+        }
+        .admin-header h2 { font-weight: 800; margin: 0; font-size: 1.4rem; }
+        .admin-table {
+            background: var(--surface-1);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+        }
+        .admin-table table { margin: 0; }
+        .admin-table th {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-tertiary);
+            border-bottom: 2px solid var(--border-color);
+        }
+        .admin-table td { font-size: 0.88rem; vertical-align: middle; }
+        .btn-ng {
+            background: var(--ng-green);
+            color: white;
+            font-weight: 700;
+            border: none;
+            border-radius: var(--radius-sm);
+            padding: 0.5rem 1.2rem;
+            font-size: 0.85rem;
+            transition: all var(--transition);
+        }
+        .btn-ng:hover { background: var(--ng-green-dark); color: white; transform: translateY(-1px); }
+
         @media (max-width: 768px) {
             .hero { padding: 2.5rem 0 2rem; }
             .stats-grid { gap: 0.6rem; }
@@ -539,51 +886,97 @@
             .stat-number { font-size: 1.5rem; }
             .winner-grid { grid-template-columns: repeat(2, 1fr); gap: 0.55rem; }
             .nav-pills-row { justify-content: flex-start; }
+            .tally-grid { grid-template-columns: repeat(2, 1fr); }
+            .tally-card .tc-votes { font-size: 1.2rem; }
         }
         @media (max-width: 400px) {
             .winner-grid { grid-template-columns: repeat(2, 1fr); }
         }
     </style>
+    {% block extra_head %}{% endblock %}
 </head>
 <body>
+    <!-- Offline Banner -->
+    <div class="offline-banner" id="offlineBanner">
+        <i class="bi bi-wifi-off me-1"></i> You're offline — showing cached data
+    </div>
+
+    <!-- Top Navbar -->
+    <nav class="top-navbar">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a href="/" class="brand-link">
+                <span class="ng-flag">
+                    <span style="background:#009401;"></span>
+                    <span style="background:#fff;"></span>
+                    <span style="background:#009401;"></span>
+                </span>
+                Nigeria Elections
+            </a>
+            <!-- Navbar Search -->
+            <div class="nav-search" id="navSearch">
+                <i class="bi bi-search ns-icon"></i>
+                <input type="text" id="navSearchInput" placeholder="Search states, LGAs, wards..." autocomplete="off">
+                <span class="ns-kbd">/</span>
+                <div class="ac-dropdown" id="acDropdown"></div>
+            </div>
+            <div class="nav-links">
+                <a href="/" class="desktop-only">Home</a>
+                <a href="/admin" class="desktop-only"><i class="bi bi-gear me-1"></i>Admin</a>
+            </div>
+        </div>
+    </nav>
+
+    {% block breadcrumbs %}{% endblock %}
+
     {% block content %}{% endblock %}
 
+    <!-- Toast notification -->
+    <div class="app-toast" id="appToast"></div>
+
     <button class="btt" id="btt" title="Back to top"><i class="bi bi-chevron-up"></i></button>
+
+    <!-- Bottom Nav (Mobile) -->
+    <nav class="bottom-nav">
+        <a href="/" id="bnHome"><i class="bi bi-house-fill"></i>Home</a>
+        <a href="/search" id="bnSearch"><i class="bi bi-search"></i>Search</a>
+        <a href="javascript:void(0)" onclick="shareCurrentPage()" id="bnShare"><i class="bi bi-share"></i>Share</a>
+        <a href="/admin" id="bnAdmin"><i class="bi bi-gear"></i>Admin</a>
+    </nav>
 
     <footer class="site-footer">
         <div class="container text-center">
             <p class="mb-1 small">
                 <i class="bi bi-palette me-1"></i> Designed by <span class="brand">Place of Ideation</span>
             </p>
-            <p class="mb-0" style="font-size:0.72rem;">{{ info.source_note }}</p>
+            <p class="mb-0" style="font-size:0.72rem;">Data sourced from INEC and verified news reports.</p>
         </div>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-    /* Scroll reveal */
+    /* ═══ Scroll reveal ═══ */
     const _ro = new IntersectionObserver(es => {
         es.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
     }, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
     document.querySelectorAll('.reveal').forEach(el => _ro.observe(el));
 
-    /* Back to top */
+    /* ═══ Back to top ═══ */
     const _btt = document.getElementById('btt');
     window.addEventListener('scroll', () => _btt.classList.toggle('visible', scrollY > 450), {passive:true});
     _btt.addEventListener('click', () => scrollTo({top:0,behavior:'smooth'}));
 
-    /* Sticky nav shadow */
+    /* ═══ Sticky nav shadow ═══ */
     const _nav = document.querySelector('.sticky-nav');
     if (_nav) {
         window.addEventListener('scroll', () => _nav.classList.toggle('scrolled', scrollY > 10), {passive:true});
     }
 
-    /* Theme */
+    /* ═══ Theme ═══ */
     function toggleTheme() {
         const h = document.documentElement, i = document.getElementById('themeIcon');
         const dark = h.getAttribute('data-bs-theme') !== 'dark';
         h.setAttribute('data-bs-theme', dark ? 'dark' : 'light');
-        i.className = dark ? 'bi bi-sun-fill' : 'bi bi-moon-stars-fill';
+        if (i) i.className = dark ? 'bi bi-sun-fill' : 'bi bi-moon-stars-fill';
         localStorage.setItem('theme', dark ? 'dark' : 'light');
     }
     (function(){
@@ -593,15 +986,7 @@
         }
     })();
 
-    /* Keyboard: / to search, Esc to blur */
-    document.addEventListener('keydown', e => {
-        if (e.key==='/' && !['INPUT','TEXTAREA'].includes(document.activeElement.tagName)) {
-            e.preventDefault(); document.getElementById('searchInput').focus();
-        }
-        if (e.key==='Escape') document.getElementById('searchInput').blur();
-    });
-
-    /* Animated number counter */
+    /* ═══ Animated number counter ═══ */
     function animateCounters() {
         document.querySelectorAll('[data-count]').forEach(el => {
             if (el.dataset.animated) return;
@@ -626,7 +1011,7 @@
     }, {threshold: 0.3});
     document.querySelectorAll('.stats-grid').forEach(el => _co.observe(el));
 
-    /* Animate bars on scroll */
+    /* ═══ Animate bars on scroll ═══ */
     const _bo = new IntersectionObserver(es => {
         es.forEach(e => {
             if (e.isIntersecting) {
@@ -637,6 +1022,148 @@
         });
     }, {threshold: 0.2});
     document.querySelectorAll('.chart-card, .pu-card').forEach(el => _bo.observe(el));
+
+    /* ═══ Navbar Search + Autocomplete ═══ */
+    (function() {
+        const input = document.getElementById('navSearchInput');
+        const dropdown = document.getElementById('acDropdown');
+        let debounceTimer;
+        let activeIdx = -1;
+
+        input.addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            const q = this.value.trim();
+            if (q.length < 2) { dropdown.classList.remove('show'); return; }
+            debounceTimer = setTimeout(() => {
+                fetch('/api/autocomplete?q=' + encodeURIComponent(q))
+                    .then(r => r.json())
+                    .then(items => {
+                        if (!items.length) { dropdown.classList.remove('show'); return; }
+                        activeIdx = -1;
+                        let html = '';
+                        items.forEach((item, i) => {
+                            html += `<a href="${item.url}" class="ac-item" data-idx="${i}">
+                                <div class="ac-icon"><i class="bi bi-${item.icon}"></i></div>
+                                <div class="ac-text">
+                                    <div class="ac-label">${item.label}</div>
+                                    <div class="ac-sub">${item.sub}</div>
+                                </div>
+                                <span class="ac-type">${item.type.replace('_', ' ')}</span>
+                            </a>`;
+                        });
+                        html += `<a href="/search?q=${encodeURIComponent(q)}" class="ac-footer">
+                            <i class="bi bi-search me-1"></i>View all results for "${q}"
+                        </a>`;
+                        dropdown.innerHTML = html;
+                        dropdown.classList.add('show');
+                    })
+                    .catch(() => dropdown.classList.remove('show'));
+            }, 300);
+        });
+
+        input.addEventListener('keydown', function(e) {
+            const items = dropdown.querySelectorAll('.ac-item');
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                activeIdx = Math.min(activeIdx + 1, items.length - 1);
+                items.forEach((el, i) => el.classList.toggle('active', i === activeIdx));
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                activeIdx = Math.max(activeIdx - 1, 0);
+                items.forEach((el, i) => el.classList.toggle('active', i === activeIdx));
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (activeIdx >= 0 && items[activeIdx]) {
+                    window.location.href = items[activeIdx].href;
+                } else if (this.value.trim()) {
+                    window.location.href = '/search?q=' + encodeURIComponent(this.value.trim());
+                }
+            } else if (e.key === 'Escape') {
+                dropdown.classList.remove('show');
+                this.blur();
+            }
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('#navSearch')) dropdown.classList.remove('show');
+        });
+
+        // Keyboard shortcut: / to focus search
+        document.addEventListener('keydown', function(e) {
+            if (e.key === '/' && !['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) {
+                e.preventDefault();
+                input.focus();
+            }
+        });
+    })();
+
+    /* ═══ Share Functions ═══ */
+    function shareCurrentPage() {
+        if (navigator.share) {
+            navigator.share({ title: document.title, url: window.location.href });
+        } else {
+            copyToClipboard(window.location.href);
+            showToast('Link copied to clipboard!');
+        }
+    }
+
+    function shareWhatsApp(text) {
+        const url = 'https://wa.me/?text=' + encodeURIComponent(text + '\n\n' + window.location.href);
+        window.open(url, '_blank');
+    }
+
+    function shareTwitter(text) {
+        const url = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text) +
+                    '&url=' + encodeURIComponent(window.location.href) +
+                    '&hashtags=NigeriaElections2027';
+        window.open(url, '_blank');
+    }
+
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            showToast('Copied to clipboard!');
+        }).catch(() => {
+            // Fallback
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            showToast('Copied!');
+        });
+    }
+
+    /* ═══ Toast Notification ═══ */
+    function showToast(msg, duration) {
+        const toast = document.getElementById('appToast');
+        toast.textContent = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), duration || 3000);
+    }
+
+    /* ═══ Offline Detection ═══ */
+    (function() {
+        const banner = document.getElementById('offlineBanner');
+        function updateOnlineStatus() {
+            banner.classList.toggle('show', !navigator.onLine);
+        }
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+        updateOnlineStatus();
+    })();
+
+    /* ═══ Active bottom nav ═══ */
+    (function() {
+        const path = window.location.pathname;
+        const links = document.querySelectorAll('.bottom-nav a');
+        links.forEach(a => {
+            const id = a.id;
+            if (id === 'bnHome' && path === '/') a.classList.add('active');
+            else if (id === 'bnSearch' && path.startsWith('/search')) a.classList.add('active');
+            else if (id === 'bnAdmin' && path.startsWith('/admin')) a.classList.add('active');
+        });
+    })();
     </script>
     {% block scripts %}{% endblock %}
 </body>
