@@ -778,9 +778,13 @@ def _import_gps_coordinates():
     for (cs, cl), val in centroids.items():
         csv_by_state[cs][cl] = val
 
+    print(f"[migrate_legacy] GPS: {len(centroids)} LGA centroids built from CSV")
+
     # Match and update
     states = State.query.all()
     state_map = {s.name: s.id for s in states}
+    total_pus = PollingUnit.query.count()
+    print(f"[migrate_legacy] GPS: {len(states)} states, {total_pus} PUs in DB")
     updated = 0
 
     for state_name, state_id in state_map.items():
