@@ -776,13 +776,12 @@ def _import_gps_coordinates():
 
     print(f"[migrate_legacy] GPS: {len(centroids)} LGA centroids built from CSV")
 
-    # Match and update
+    # Match LGAs and build (lga_id -> (lat, lng)) mapping
     states = State.query.all()
     state_map = {s.name: s.id for s in states}
-    total_pus = PollingUnit.query.count()
-    print(f"[migrate_legacy] GPS: {len(states)} states, {total_pus} PUs in DB")
-    updated = 0
+    print(f"[migrate_legacy] GPS: {len(states)} states, {PollingUnit.query.count()} PUs in DB")
 
+    lga_to_coords = {}  # lga_id -> (lat, lng)
     for state_name, state_id in state_map.items():
         lgas = LGA.query.filter_by(state_id=state_id).all()
         for lga in lgas:
@@ -800,16 +799,20 @@ def _import_gps_coordinates():
                         break
 
             if centroid:
-                lat, lng = centroid
-                wards = Ward.query.filter_by(lga_id=lga.id).all()
-                for ward in wards:
-                    pus = PollingUnit.query.filter_by(ward_id=ward.id).filter(
-                        PollingUnit.latitude.is_(None)
-                    ).all()
-                    for pu in pus:
-                        pu.latitude = lat
-                        pu.longitude = lng
-                        updated += 1
+                lga_to_coords[lga.id] = centroid
+
+    print(f"[migrate_legacy] GPS: matched {len(lga_to_coords)} LGAs, updating via raw SQL...")
+
+    # Use raw SQL for speed — single UPDATE per LGA
+    from sqlalchemy import text
+    updated = 0
+    for lga_id, (lat, lng) in lga_to_coords.items():
+        result = db.session.execute(text(
+            "UPDATE polling_units SET latitude = :lat, longitude = :lng "
+            "WHERE latitude IS NULL AND ward_id IN "
+            "(SELECT id FROM wards WHERE lga_id = :lga_id)"
+        ), {"lat": lat, "lng": lng, "lga_id": lga_id})
+        updated += result.rowcount
 
     db.session.commit()
     print(f"[migrate_legacy] GPS coordinates imported for {updated:,} polling units.")
