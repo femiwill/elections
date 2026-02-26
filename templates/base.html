@@ -6,9 +6,14 @@
     <title>{% block title %}Nigeria Election Results{% endblock %}</title>
     <meta name="description" content="Track election results from across Nigeria">
     <meta name="theme-color" content="#009401">
+    <meta name="robots" content="{% block robots %}index, follow{% endblock %}">
+    <link rel="canonical" href="{% block canonical %}{{ request.url.replace('http://', 'https://').split('?')[0] }}{% endblock %}">
     <meta property="og:title" content="{% block og_title %}Nigeria Election Results{% endblock %}">
     <meta property="og:description" content="{% block og_desc %}Track election results from across Nigeria{% endblock %}">
     <meta property="og:type" content="website">
+    <meta property="og:url" content="{% block og_url %}{{ request.url.replace('http://', 'https://').split('?')[0] }}{% endblock %}">
+    <meta property="og:locale" content="en_NG">
+    <meta property="og:site_name" content="Nigeria Election Results">
     {% block og_image %}{% endblock %}
     <meta name="twitter:card" content="{% block twitter_card %}summary{% endblock %}">
     {% block twitter_image %}{% endblock %}
@@ -935,6 +940,10 @@
             .winner-grid { grid-template-columns: repeat(2, 1fr); }
         }
     </style>
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="/static/icon-192.png">
+    <link rel="manifest" href="/static/manifest.json">
+    {% block structured_data %}{% endblock %}
     {% block extra_head %}{% endblock %}
 </head>
 <body>
@@ -973,7 +982,9 @@
 
     {% block breadcrumbs %}{% endblock %}
 
+    <main>
     {% block content %}{% endblock %}
+    </main>
 
     <!-- Toast notification -->
     <div class="app-toast" id="appToast"></div>

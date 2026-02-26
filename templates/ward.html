@@ -8,6 +8,12 @@
 {% block twitter_card %}summary_large_image{% endblock %}
 {% block twitter_image %}<meta name="twitter:image" content="{{ request.url_root.replace('http://', 'https://').rstrip('/') }}/share/card/{{ election.slug }}/{{ state.code }}/{{ lga.id }}{% if current_type %}?type={{ current_type.slug }}{% endif %}">{% endblock %}
 
+{% block structured_data %}
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Elections","item":"{{ url_for('index', _external=True, _scheme='https') }}"},{"@type":"ListItem","position":2,"name":"{{ election.name }}","item":"{{ url_for('election_overview', slug=election.slug, _external=True, _scheme='https') }}"},{"@type":"ListItem","position":3,"name":"{{ state.name }}","item":"{{ url_for('state_page', slug=election.slug, state_code=state.code, _external=True, _scheme='https') }}"},{"@type":"ListItem","position":4,"name":"{{ lga.name }}","item":"{{ url_for('lga_page', slug=election.slug, state_code=state.code, lga_id=lga.id, _external=True, _scheme='https') }}"},{"@type":"ListItem","position":5,"name":"{{ ward.name }}","item":"{{ url_for('ward_page', slug=election.slug, state_code=state.code, lga_id=lga.id, ward_id=ward.id, _external=True, _scheme='https') }}"}]}
+</script>
+{% endblock %}
+
 {% block breadcrumbs %}
 {{ breadcrumb([
     ('Elections', url_for('index')),

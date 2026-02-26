@@ -8,6 +8,15 @@
 {% block twitter_card %}summary_large_image{% endblock %}
 {% block twitter_image %}<meta name="twitter:image" content="{{ request.url_root.replace('http://', 'https://').rstrip('/') }}/share/card/{{ election.slug }}{% if current_type %}?type={{ current_type.slug }}{% endif %}">{% endblock %}
 
+{% block structured_data %}
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Event","name":"{{ election.name }}","startDate":"{{ election.election_date.isoformat() if election.election_date else '' }}","location":{"@type":"Place","name":"Nigeria"},"organizer":{"@type":"Organization","name":"INEC"},"eventStatus":"https://schema.org/EventScheduled"}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Elections","item":"{{ url_for('index', _external=True, _scheme='https') }}"},{"@type":"ListItem","position":2,"name":"{{ election.name }}","item":"{{ url_for('election_overview', slug=election.slug, _external=True, _scheme='https') }}"}]}
+</script>
+{% endblock %}
+
 {% block breadcrumbs %}
 {{ breadcrumb([
     ('Elections', url_for('index')),

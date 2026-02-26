@@ -2,6 +2,13 @@
 {% from "macros.html" import status_badge %}
 
 {% block title %}Nigeria Election Results{% endblock %}
+{% block og_desc %}Track live election results across Nigeria's 36 states + FCT — from polling units to final declarations{% endblock %}
+
+{% block structured_data %}
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebSite","name":"Nigeria Election Results","url":"{{ request.url_root.replace('http://', 'https://').rstrip('/') }}","potentialAction":{"@type":"SearchAction","target":"{{ url_for('search_page', _external=True, _scheme='https') }}?q={search_term_string}","query-input":"required name=search_term_string"}}
+</script>
+{% endblock %}
 
 {% block content %}
 <!-- ═══ HERO ═══ -->

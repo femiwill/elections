@@ -1982,6 +1982,105 @@ def share_card_lga(slug, state_code, lga_id):
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+# SEO — robots.txt + sitemap.xml
+# ══════════════════════════════════════════════════════════════════════════════
+
+@app.route('/robots.txt')
+def robots_txt():
+    lines = [
+        "User-agent: *",
+        "Allow: /",
+        "Disallow: /admin",
+        "Disallow: /api/",
+        "Disallow: /export/",
+        "Disallow: /share/card/",
+        "",
+        f"Sitemap: {url_for('sitemap_xml', _external=True, _scheme='https')}",
+    ]
+    return Response("\n".join(lines), mimetype="text/plain")
+
+
+@app.route('/sitemap.xml')
+def sitemap_xml():
+    pages = []
+
+    # Homepage
+    pages.append({
+        'loc': url_for('index', _external=True, _scheme='https'),
+        'changefreq': 'daily',
+        'priority': '1.0',
+    })
+
+    # Search & Find Polling Unit
+    pages.append({
+        'loc': url_for('search_page', _external=True, _scheme='https'),
+        'changefreq': 'weekly',
+        'priority': '0.5',
+    })
+    pages.append({
+        'loc': url_for('find_polling_unit', _external=True, _scheme='https'),
+        'changefreq': 'weekly',
+        'priority': '0.5',
+    })
+
+    # Election pages
+    elections = Election.query.all()
+    for election in elections:
+        freq = 'hourly' if election.status == 'ongoing' else 'weekly'
+        pages.append({
+            'loc': url_for('election_overview', slug=election.slug, _external=True, _scheme='https'),
+            'changefreq': freq,
+            'priority': '0.9',
+        })
+
+        # State pages — only states that have results for this election
+        states_with_results = db.session.query(State).join(
+            Result, Result.state_id == State.id
+        ).join(
+            ElectionType, ElectionType.id == Result.election_type_id
+        ).filter(
+            ElectionType.election_id == election.id
+        ).distinct().all()
+
+        for state in states_with_results:
+            pages.append({
+                'loc': url_for('state_page', slug=election.slug, state_code=state.code, _external=True, _scheme='https'),
+                'changefreq': freq,
+                'priority': '0.8',
+            })
+
+            # LGA pages within this state that have results
+            lgas_with_results = db.session.query(LGA).join(
+                Result, Result.lga_id == LGA.id
+            ).join(
+                ElectionType, ElectionType.id == Result.election_type_id
+            ).filter(
+                ElectionType.election_id == election.id,
+                LGA.state_id == state.id
+            ).distinct().all()
+
+            for lga in lgas_with_results:
+                pages.append({
+                    'loc': url_for('lga_page', slug=election.slug, state_code=state.code, lga_id=lga.id, _external=True, _scheme='https'),
+                    'changefreq': freq,
+                    'priority': '0.7',
+                })
+
+    # Build XML
+    xml_parts = ['<?xml version="1.0" encoding="UTF-8"?>']
+    xml_parts.append('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">')
+    for page in pages:
+        xml_parts.append('  <url>')
+        xml_parts.append(f'    <loc>{page["loc"]}</loc>')
+        xml_parts.append(f'    <changefreq>{page["changefreq"]}</changefreq>')
+        xml_parts.append(f'    <priority>{page["priority"]}</priority>')
+        xml_parts.append('  </url>')
+    xml_parts.append('</urlset>')
+
+    return Response("\n".join(xml_parts), mimetype="application/xml")
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 # MAIN
 # ══════════════════════════════════════════════════════════════════════════════
 
