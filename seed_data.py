@@ -309,6 +309,8 @@ PARTIES_DATA = [
     ("Peoples Redemption Party", "PRP", "#CD853F"),
     ("Action Peoples Network", "APN", "#556B2F"),
     ("Blueprint Party", "BP", "#8B4513"),
+    ("Democratic Leadership Alliance", "DLA", "#1E90FF"),
+    ("Nigeria Democratic Congress", "NDC", "#2E8B57"),
 ]
 
 
