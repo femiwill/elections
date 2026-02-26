@@ -503,6 +503,67 @@ def admin_results_bulk_upload():
     return render_template('admin/bulk_upload.html', elections=elections)
 
 
+# ── GPS Coordinates Upload ────────────────────────────────────────────────────
+
+@app.route('/admin/coordinates', methods=['GET', 'POST'])
+@login_required
+def admin_coordinates():
+    message = None
+    if request.method == 'POST':
+        csv_file = request.files.get('csv_file')
+        if not csv_file:
+            flash('No file uploaded.', 'danger')
+            return redirect(url_for('admin_coordinates'))
+
+        try:
+            content = csv_file.read().decode('utf-8-sig')
+            reader = csv.DictReader(io.StringIO(content))
+            updated = 0
+            skipped = 0
+            for row in reader:
+                pu_code = (row.get('pu_code') or row.get('code') or '').strip()
+                pu_id = row.get('pu_id') or row.get('id') or ''
+                lat = row.get('latitude') or row.get('lat') or ''
+                lng = row.get('longitude') or row.get('lng') or row.get('lon') or ''
+                if not lat or not lng:
+                    skipped += 1
+                    continue
+                try:
+                    lat_f = float(lat)
+                    lng_f = float(lng)
+                except (ValueError, TypeError):
+                    skipped += 1
+                    continue
+
+                pu = None
+                if pu_id:
+                    pu = PollingUnit.query.get(int(pu_id))
+                if not pu and pu_code:
+                    pu = PollingUnit.query.filter_by(code=pu_code).first()
+                if pu:
+                    pu.latitude = lat_f
+                    pu.longitude = lng_f
+                    updated += 1
+                else:
+                    skipped += 1
+
+            db.session.commit()
+            flash(f'Updated coordinates for {updated} polling units. {skipped} skipped.', 'success')
+        except Exception as e:
+            flash(f'Error processing file: {str(e)}', 'danger')
+
+        return redirect(url_for('admin_coordinates'))
+
+    total_pus = PollingUnit.query.count()
+    pus_with_coords = PollingUnit.query.filter(
+        PollingUnit.latitude.isnot(None),
+        PollingUnit.longitude.isnot(None),
+    ).count()
+    return render_template('admin/coordinates.html',
+                           total_pus=total_pus,
+                           pus_with_coords=pus_with_coords)
+
+
 # ── Collation Declaration ─────────────────────────────────────────────────────
 
 @app.route('/admin/results/declare', methods=['GET', 'POST'])
@@ -581,7 +642,10 @@ def api_wards(lga_id):
 @app.route('/api/polling-units/<int:ward_id>')
 def api_polling_units(ward_id):
     pus = PollingUnit.query.filter_by(ward_id=ward_id).order_by(PollingUnit.name).all()
-    return jsonify([{'id': p.id, 'name': p.name, 'code': p.code} for p in pus])
+    return jsonify([{
+        'id': p.id, 'name': p.name, 'code': p.code,
+        'latitude': p.latitude, 'longitude': p.longitude,
+    } for p in pus])
 
 
 @app.route('/api/election-types/<int:election_id>')

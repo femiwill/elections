@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% from "macros.html" import flash_messages %}
+
+{% block title %}GPS Coordinates — Admin{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumb-bar">
+    <div class="container">
+        <a href="/">Home</a>
+        <span class="separator"><i class="bi bi-chevron-right" style="font-size:0.7rem;"></i></span>
+        <a href="/admin">Admin</a>
+        <span class="separator"><i class="bi bi-chevron-right" style="font-size:0.7rem;"></i></span>
+        <span style="color:var(--text-secondary);font-weight:600;">GPS Coordinates</span>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2><i class="bi bi-pin-map-fill me-2" style="color:var(--ng-green);"></i>GPS Coordinates</h2>
+                <p style="font-size:0.82rem;color:var(--text-tertiary);margin:0;">Upload polling unit GPS coordinates for Google Maps navigation</p>
+            </div>
+            <a href="/admin" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<section class="section-spacer">
+    <div class="container" style="max-width:700px;">
+        {{ flash_messages() }}
+
+        <!-- Coverage Stats -->
+        <div class="stats-grid reveal mb-4" style="grid-template-columns: repeat(2, 1fr);">
+            <div class="stat-card">
+                <div class="stat-icon" style="background:rgba(0,148,1,0.08);color:var(--ng-green);"><i class="bi bi-box-seam"></i></div>
+                <div class="stat-number" data-count="{{ '{:,}'.format(total_pus) }}">0</div>
+                <div class="stat-label">Total Polling Units</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background:rgba(0,102,179,0.08);color:#0066B3;"><i class="bi bi-pin-map"></i></div>
+                <div class="stat-number" data-count="{{ '{:,}'.format(pus_with_coords) }}">0</div>
+                <div class="stat-label">With GPS Coordinates</div>
+            </div>
+        </div>
+
+        {% if total_pus > 0 %}
+        <div class="reveal mb-4">
+            <div style="height:6px;background:var(--surface-3);border-radius:3px;overflow:hidden;">
+                <div style="height:100%;background:var(--ng-green);border-radius:3px;width:{{ (pus_with_coords / total_pus * 100)|round(1) }}%;transition:width 0.3s;"></div>
+            </div>
+            <div style="font-size:0.78rem;color:var(--text-tertiary);margin-top:0.3rem;text-align:center;">
+                {{ (pus_with_coords / total_pus * 100)|round(1) }}% coverage
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Upload Form -->
+        <div class="chart-card reveal">
+            <div class="section-head" style="margin-bottom:1rem;">
+                <div class="icon-box" style="background:rgba(0,148,1,0.08);color:var(--ng-green);">
+                    <i class="bi bi-cloud-arrow-up-fill"></i>
+                </div>
+                <div>
+                    <h4>Upload Coordinates CSV</h4>
+                    <p class="sub">Bulk upload GPS coordinates for polling units</p>
+                </div>
+            </div>
+
+            <form method="POST" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label class="form-label" style="font-weight:700;font-size:0.85rem;">CSV File</label>
+                    <input type="file" name="csv_file" accept=".csv" class="form-control"
+                           style="background:var(--surface-2);border-color:var(--border-color);color:var(--text-primary);" required>
+                </div>
+                <button type="submit" class="btn btn-ng">
+                    <i class="bi bi-upload me-1"></i>Upload Coordinates
+                </button>
+            </form>
+
+            <div class="note-box mt-3" style="border-left-color:#0066B3;">
+                <div style="font-weight:700;font-size:0.82rem;margin-bottom:0.3rem;">CSV Format</div>
+                <div style="font-size:0.78rem;color:var(--text-secondary);line-height:1.6;">
+                    Your CSV must have columns for identifying the PU and its coordinates. Accepted columns:
+                </div>
+                <div style="font-size:0.75rem;font-family:monospace;background:var(--surface-2);padding:0.5rem 0.75rem;border-radius:6px;margin-top:0.4rem;overflow-x:auto;">
+                    pu_code,latitude,longitude<br>
+                    15-01-07-001,9.0578,7.4951<br>
+                    15-01-07-002,9.0612,7.4983
+                </div>
+                <div style="font-size:0.75rem;color:var(--text-tertiary);margin-top:0.4rem;">
+                    Accepted ID columns: <code>pu_code</code>, <code>code</code>, <code>pu_id</code>, <code>id</code><br>
+                    Accepted coordinate columns: <code>latitude</code>/<code>lat</code>, <code>longitude</code>/<code>lng</code>/<code>lon</code>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

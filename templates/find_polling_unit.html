@@ -109,6 +109,8 @@
         sel.innerHTML = '<option value="">' + msg + '</option>';
         sel.disabled = true;
     }
+    let puData = {}; // store PU details keyed by id
+
     function loadOpts(sel, url, labelKey) {
         sel.innerHTML = '<option value="">Loading...</option>';
         sel.disabled = true;
@@ -119,6 +121,10 @@
                 o.value = item.id;
                 o.textContent = item[labelKey] || item.name;
                 sel.appendChild(o);
+                // Cache PU coordinate data
+                if (item.latitude !== undefined) {
+                    puData[item.id] = { lat: item.latitude, lng: item.longitude };
+                }
             });
             sel.disabled = false;
         });
@@ -141,10 +147,15 @@
     });
     puSel.addEventListener('change', function() {
         if (!this.value) { result.style.display = 'none'; return; }
+        const puId = this.value;
         const puName = puSel.options[puSel.selectedIndex].text;
         const stateName = stSel.options[stSel.selectedIndex].text;
         const lgaName = lgSel.options[lgSel.selectedIndex].text;
         const wardName = wdSel.options[wdSel.selectedIndex].text;
+        const coords = puData[puId];
+        const hasCoords = coords && coords.lat && coords.lng;
+        const mapsUrl = hasCoords ? `https://www.google.com/maps/search/?api=1&query=${coords.lat},${coords.lng}` : '';
+
         result.innerHTML = `
             <div style="background:rgba(0,148,1,0.06);border:1px solid rgba(0,148,1,0.2);border-radius:12px;padding:1.2rem;">
                 <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--ng-green);margin-bottom:0.6rem;">
@@ -158,6 +169,18 @@
                     <div><i class="bi bi-building me-1" style="color:var(--text-tertiary);"></i> ${lgaName} LGA</div>
                     <div><i class="bi bi-geo-alt me-1" style="color:var(--text-tertiary);"></i> ${stateName} State</div>
                 </div>
+                ${hasCoords ? `
+                <a href="${mapsUrl}" target="_blank" rel="noopener"
+                   style="display:inline-flex;align-items:center;gap:0.5rem;margin-top:0.8rem;background:#4285F4;color:#fff;font-weight:700;font-size:0.82rem;padding:0.5rem 1rem;border-radius:8px;text-decoration:none;transition:background 0.2s;"
+                   onmouseover="this.style.background='#3367D6'" onmouseout="this.style.background='#4285F4'">
+                    <i class="bi bi-geo-alt-fill"></i> Navigate with Google Maps
+                    <i class="bi bi-box-arrow-up-right" style="font-size:0.7rem;"></i>
+                </a>
+                ` : `
+                <div style="font-size:0.75rem;color:var(--text-tertiary);margin-top:0.8rem;">
+                    <i class="bi bi-info-circle me-1"></i> GPS coordinates not yet available for this polling unit
+                </div>
+                `}
             </div>
         `;
         result.style.display = '';

@@ -107,6 +107,8 @@ class PollingUnit(db.Model):
     code = db.Column(db.String(30), nullable=True)
     ward_id = db.Column(db.Integer, db.ForeignKey("wards.id"), nullable=False)
     registered_voters = db.Column(db.Integer, nullable=True)
+    latitude = db.Column(db.Float, nullable=True)
+    longitude = db.Column(db.Float, nullable=True)
 
 
 # ─── Parties & Candidates ────────────────────────────────────────────────────
