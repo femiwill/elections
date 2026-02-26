@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "macros.html" import breadcrumb %}
+{% from "macros.html" import breadcrumb, status_badge %}
 
 {% block title %}{{ state.name }} — LGAs{% endblock %}
 
@@ -52,6 +52,58 @@
         </div>
     </div>
 </section>
+
+<!-- Elections for this state -->
+{% if state_elections %}
+<section class="pb-4">
+    <div class="container">
+        <div class="section-head reveal">
+            <div class="icon-box" style="background:rgba(0,102,179,0.08);color:#0066B3;"><i class="bi bi-calendar-event"></i></div>
+            <div>
+                <h4>Elections</h4>
+                <p class="sub">Elections covering {{ state.name }}{% if state.name != 'FCT' %} State{% endif %}</p>
+            </div>
+        </div>
+        <div class="row g-3">
+            {% for election in state_elections %}
+            <div class="col-md-6 col-lg-4 reveal">
+                <a href="{{ url_for('election_overview', slug=election.slug) }}" class="election-card d-block text-decoration-none">
+                    {% if election.status == 'ongoing' %}
+                    <div class="card-accent" style="background:linear-gradient(90deg, #FF6B00, #FF9500);"></div>
+                    {% elif election.status == 'upcoming' %}
+                    <div class="card-accent" style="background:linear-gradient(90deg, #0066B3, #4da6ff);"></div>
+                    {% else %}
+                    <div class="card-accent"></div>
+                    {% endif %}
+                    <div class="p-3">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 style="font-weight:700;font-size:0.95rem;color:var(--text-primary);margin:0;">{{ election.name }}</h5>
+                            {% if election.status == 'ongoing' %}
+                            <span class="live-badge"><span class="live-dot"></span> LIVE</span>
+                            {% else %}
+                            {{ status_badge(election.status) }}
+                            {% endif %}
+                        </div>
+                        {% if election.election_date %}
+                        <div style="font-size:0.85rem;font-weight:700;color:{% if election.status == 'ongoing' %}#FF6B00{% elif election.status == 'upcoming' %}#0066B3{% else %}var(--ng-green){% endif %};margin-bottom:0.4rem;">
+                            <i class="bi bi-calendar3 me-1"></i>{{ election.election_date.strftime('%B %d, %Y') }}
+                        </div>
+                        {% endif %}
+                        {% if election.description %}
+                        <p style="font-size:0.82rem;color:var(--text-secondary);margin:0;line-height:1.5;">{{ election.description|truncate(150) }}</p>
+                        {% endif %}
+                        <div style="font-size:0.75rem;color:{% if election.status == 'ongoing' %}#FF6B00{% elif election.status == 'upcoming' %}#0066B3{% else %}var(--ng-green){% endif %};font-weight:600;margin-top:0.6rem;">
+                            {{ election.election_types|length }} election type{{ 's' if election.election_types|length != 1 else '' }}
+                            <i class="bi bi-arrow-right ms-1"></i>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
 
 <!-- LGA Grid -->
 <section class="pb-5">

@@ -626,9 +626,35 @@ def state_browse(state_code):
             'pu_count': pu_count,
         })
 
+    # Find elections relevant to this state (state-level + national)
+    state_elections = []
+    for election in Election.query.order_by(Election.election_date.desc()).all():
+        for et in election.election_types:
+            # National elections apply to all states
+            if et.level == 'national':
+                state_elections.append(election)
+                break
+            # State-level: check if any candidates or results are scoped to this state
+            if et.level == 'state':
+                has_candidates = Candidate.query.filter_by(
+                    election_type_id=et.id, state_id=state.id
+                ).first()
+                has_results = Result.query.filter_by(
+                    election_type_id=et.id, state_id=state.id
+                ).first()
+                if has_candidates or has_results:
+                    state_elections.append(election)
+                    break
+                # Also match by name (e.g. "Ekiti" in "Ekiti State Governorship")
+                state_name = state.name.replace(' State', '')
+                if state_name.lower() in election.name.lower():
+                    state_elections.append(election)
+                    break
+
     return render_template('state_browse.html',
                            state=state,
-                           lga_data=lga_data)
+                           lga_data=lga_data,
+                           state_elections=state_elections)
 
 
 @app.route('/states/<state_code>/lga/<int:lga_id>')
