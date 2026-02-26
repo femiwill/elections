@@ -137,6 +137,10 @@ def migrate_legacy():
     _seed_upcoming_elections()
 
     db.session.commit()
+
+    # ── 5. Import GPS coordinates ──────────────────────────────────────
+    _import_gps_coordinates()
+
     print("[migrate_legacy] Migration complete.")
 
 
@@ -657,6 +661,158 @@ def _migrate_byelection_constituencies(
             notes="; ".join(notes_parts) if notes_parts else None,
         )
         db.session.add(collation)
+
+
+def _import_gps_coordinates():
+    """Import GPS coordinates from bundled CSV data into polling units."""
+    import csv
+    import re
+    import os
+    from collections import defaultdict
+
+    csv_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                            "data", "polling_units_gps.csv")
+    if not os.path.exists(csv_path):
+        print("[migrate_legacy] GPS CSV not found — skipping GPS import.")
+        return
+
+    # Check if any PUs already have coordinates
+    has_coords = PollingUnit.query.filter(PollingUnit.latitude.isnot(None)).first()
+    if has_coords:
+        print("[migrate_legacy] GPS coordinates already imported — skipping.")
+        return
+
+    print("[migrate_legacy] Importing GPS coordinates...")
+
+    STATE_MAP = {
+        "ABIA": "Abia", "ADAMAWA": "Adamawa", "AKWA IBOM": "Akwa Ibom",
+        "ANAMBRA": "Anambra", "BAUCHI": "Bauchi", "BAYELSA": "Bayelsa",
+        "BENUE": "Benue", "BORNO": "Borno", "CROSS RIVER": "Cross River",
+        "DELTA": "Delta", "EBONYI": "Ebonyi", "EDO": "Edo", "EKITI": "Ekiti",
+        "ENUGU": "Enugu", "FEDERAL CAPITAL TERRITORY": "FCT", "GOMBE": "Gombe",
+        "IMO": "Imo", "JIGAWA": "Jigawa", "KADUNA": "Kaduna", "KANO": "Kano",
+        "KATSINA": "Katsina", "KEBBI": "Kebbi", "KOGI": "Kogi", "KWARA": "Kwara",
+        "LAGOS": "Lagos", "NASARAWA": "Nasarawa", "NIGER": "Niger", "OGUN": "Ogun",
+        "ONDO": "Ondo", "OSUN": "Osun", "OYO": "Oyo", "PLATEAU": "Plateau",
+        "RIVERS": "Rivers", "SOKOTO": "Sokoto", "TARABA": "Taraba",
+        "YOBE": "Yobe", "ZAMFARA": "Zamfara",
+    }
+
+    LGA_ALIASES = {
+        ("Abia", "OBI NGWA"): "OBINGWA",
+        ("Abia", "OSISIOMA NGWA"): "OSISIOMA",
+        ("Abia", "UMU NNEOCHI"): "UMUNNEOCHI",
+        ("Adamawa", "GAYUK"): "GUYUK",
+        ("Adamawa", "GRIE"): "GIRE 1",
+        ("Adamawa", "MAYO BELWA"): "MAYO BELWA",
+        ("Anambra", "IHIALA"): "IHALA",
+        ("Anambra", "ONITSHA SOUTH"): "ONITSHA SOUTH",
+        ("Bauchi", "DAMBAN"): "DAMBAM",
+        ("Borno", "MAIDUGURI"): "MAIDUGURI M. C.",
+        ("Cross River", "CALABAR MUNICIPAL"): "CALABAR MUNICIPALITY",
+        ("Edo", "UHUNMWONDE"): "UHUNMWODE",
+        ("Gombe", "YAMALTU DEBA"): "YALMALTU DEBA",
+        ("Jigawa", "BIRINIWA"): "BIRNIWA",
+        ("Jigawa", "KIRI KASAMA"): "KIRIKA SAMMA",
+        ("Kano", "DAMBATTA"): "DANBATA",
+        ("Kano", "DAWAKIN KUDU"): "DAWAKI KUDU",
+        ("Kano", "DAWAKIN TOFA"): "DAWAKI TOFA",
+        ("Kano", "GARUN MALLAM"): "GARUN MALAM",
+        ("Katsina", "MALUMFASHI"): "MALUFASHI",
+        ("Kebbi", "ALEIRO"): "ALIERO",
+        ("Kebbi", "AREWA DANDI"): "AREWA",
+        ("Kogi", "KOTON KARFE"): "KOGI . K. K.",
+        ("Kogi", "MOPA MURO"): "MOPA MORO",
+        ("Kogi", "OGORI MAGONGO"): "OGORI MANGOGO",
+        ("Kwara", "OKE ERO"): "OKE ERO",
+        ("Kwara", "PATEGI"): "PATIGI",
+        ("Lagos", "IFAKO IJAIYE"): "IFAKO IJAYE",
+        ("Lagos", "SHOMOLU"): "SOMOLU",
+        ("Ondo", "ILE OLUJI OKEIGBO"): "ILE OLUJI OKE IGBO",
+        ("Osun", "AIYEDAADE"): "AYEDAADE",
+        ("Osun", "AIYEDIRE"): "AYEDIRE",
+        ("Osun", "ATAKUNMOSA EAST"): "ATAKUMOSA EAST",
+        ("Osun", "ATAKUNMOSA WEST"): "ATAKUMOSA WEST",
+        ("Oyo", "OGBOMOSHO NORTH"): "OGBOMOSO NORTH",
+        ("Oyo", "OGBOMOSHO SOUTH"): "OGBOMOSO SOUTH",
+        ("Oyo", "ORELOPE"): "OORELOPE",
+    }
+
+    def norm(name):
+        name = name.upper().strip()
+        name = re.sub(r'\s+', ' ', name)
+        name = re.sub(r'\s*\(.*?\)', '', name)
+        name = name.replace('/', ' ').replace('-', ' ')
+        name = re.sub(r'\s+', ' ', name)
+        return name.strip()
+
+    # Build LGA centroids from CSV
+    lga_coords = defaultdict(list)
+    with open(csv_path, 'r', encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            lat_str = row.get('location.latitude', '').strip()
+            lng_str = row.get('location.longitude', '').strip()
+            if not lat_str or not lng_str:
+                continue
+            try:
+                lat = float(lat_str)
+                lng = float(lng_str)
+            except ValueError:
+                continue
+            if not (3.0 < lat < 15.0 and 2.0 < lng < 16.0):
+                continue
+            csv_state = row['state_name'].strip()
+            db_state = STATE_MAP.get(csv_state)
+            if not db_state:
+                continue
+            lga_coords[(db_state, norm(row['local_government_name']))].append((lat, lng))
+
+    centroids = {}
+    for key, coords in lga_coords.items():
+        avg_lat = sum(c[0] for c in coords) / len(coords)
+        avg_lng = sum(c[1] for c in coords) / len(coords)
+        centroids[key] = (avg_lat, avg_lng)
+
+    csv_by_state = defaultdict(dict)
+    for (cs, cl), val in centroids.items():
+        csv_by_state[cs][cl] = val
+
+    # Match and update
+    states = State.query.all()
+    state_map = {s.name: s.id for s in states}
+    updated = 0
+
+    for state_name, state_id in state_map.items():
+        lgas = LGA.query.filter_by(state_id=state_id).all()
+        for lga in lgas:
+            norm_lga = norm(lga.name)
+            key = (state_name, norm_lga)
+
+            centroid = centroids.get(key)
+            if not centroid and key in LGA_ALIASES:
+                centroid = centroids.get((state_name, norm(LGA_ALIASES[key])))
+            if not centroid:
+                clean_db = re.sub(r'[^A-Z0-9]', '', norm_lga)
+                for cl, val in csv_by_state.get(state_name, {}).items():
+                    if re.sub(r'[^A-Z0-9]', '', cl) == clean_db:
+                        centroid = val
+                        break
+
+            if centroid:
+                lat, lng = centroid
+                wards = Ward.query.filter_by(lga_id=lga.id).all()
+                for ward in wards:
+                    pus = PollingUnit.query.filter_by(ward_id=ward.id).filter(
+                        PollingUnit.latitude.is_(None)
+                    ).all()
+                    for pu in pus:
+                        pu.latitude = lat
+                        pu.longitude = lng
+                        updated += 1
+
+    db.session.commit()
+    print(f"[migrate_legacy] GPS coordinates imported for {updated:,} polling units.")
 
 
 # ── CLI entry point ───────────────────────────────────────────────────────────
