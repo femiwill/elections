@@ -688,6 +688,17 @@ def index():
                            total_parties=total_parties)
 
 
+@app.route('/find-polling-unit')
+def find_polling_unit():
+    states = State.query.order_by(State.name).all()
+    total_pus = PollingUnit.query.count()
+    total_wards = Ward.query.count()
+    return render_template('find_polling_unit.html',
+                           states=states,
+                           total_pus=total_pus,
+                           total_wards=total_wards)
+
+
 @app.route('/election/<slug>')
 def election_overview(slug):
     election = Election.query.filter_by(slug=slug).first_or_404()

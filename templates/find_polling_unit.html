@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% from "macros.html" import breadcrumb %}
+
+{% block title %}Find My Polling Unit — Nigeria Election Results{% endblock %}
+
+{% block breadcrumbs %}
+{{ breadcrumb([
+    ('Home', url_for('index')),
+    ('Find My Polling Unit', None)
+]) }}
+{% endblock %}
+
+{% block content %}
+<section class="hero" style="padding:2rem 0 1.75rem;">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <span class="hero-badge">
+                    <i class="bi bi-search-heart"></i> Polling Unit Finder
+                </span>
+                <h1>Find My <span class="accent">Polling Unit</span></h1>
+                <p class="hero-sub mb-0">Drill down from state to your exact polling unit across all 36 states + FCT</p>
+            </div>
+            <button class="theme-btn" onclick="toggleTheme()" title="Toggle dark mode">
+                <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
+            </button>
+        </div>
+    </div>
+</section>
+
+<section class="section-spacer">
+    <div class="container" style="max-width:750px;">
+        <div class="chart-card reveal">
+            <div class="section-head" style="margin-bottom:1.2rem;">
+                <div class="icon-box" style="background:rgba(220,38,38,0.08);color:#dc2626;">
+                    <i class="bi bi-geo-alt-fill"></i>
+                </div>
+                <div>
+                    <h4>Select Your Location</h4>
+                    <p class="sub">Choose your state, then narrow down step by step</p>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label style="font-weight:700;font-size:0.85rem;margin-bottom:0.4rem;display:block;">
+                        <i class="bi bi-geo me-1" style="color:#dc2626;"></i>State
+                    </label>
+                    <select id="fpuState" class="form-select" style="background:var(--surface-2);border-color:var(--border-color);color:var(--text-primary);padding:0.6rem 0.75rem;">
+                        <option value="">Select state...</option>
+                        {% for s in states %}
+                        <option value="{{ s.id }}" data-code="{{ s.code }}">{{ s.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label style="font-weight:700;font-size:0.85rem;margin-bottom:0.4rem;display:block;">
+                        <i class="bi bi-building me-1" style="color:#dc2626;"></i>Local Government Area
+                    </label>
+                    <select id="fpuLga" class="form-select" disabled style="background:var(--surface-2);border-color:var(--border-color);color:var(--text-primary);padding:0.6rem 0.75rem;">
+                        <option value="">Select LGA...</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label style="font-weight:700;font-size:0.85rem;margin-bottom:0.4rem;display:block;">
+                        <i class="bi bi-pin-map me-1" style="color:#dc2626;"></i>Ward
+                    </label>
+                    <select id="fpuWard" class="form-select" disabled style="background:var(--surface-2);border-color:var(--border-color);color:var(--text-primary);padding:0.6rem 0.75rem;">
+                        <option value="">Select ward...</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label style="font-weight:700;font-size:0.85rem;margin-bottom:0.4rem;display:block;">
+                        <i class="bi bi-box-seam me-1" style="color:#dc2626;"></i>Polling Unit
+                    </label>
+                    <select id="fpuPu" class="form-select" disabled style="background:var(--surface-2);border-color:var(--border-color);color:var(--text-primary);padding:0.6rem 0.75rem;">
+                        <option value="">Select polling unit...</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Result display -->
+            <div id="fpuResult" class="mt-4" style="display:none;"></div>
+        </div>
+
+        <!-- Stats hint -->
+        <div class="reveal mt-3" style="text-align:center;">
+            <p style="font-size:0.78rem;color:var(--text-tertiary);">
+                Covering <strong style="color:var(--text-primary);">{{ "{:,}".format(total_pus) }}</strong> polling units across
+                <strong style="color:var(--text-primary);">{{ states|length }}</strong> states &middot;
+                <strong style="color:var(--text-primary);">774</strong> LGAs &middot;
+                <strong style="color:var(--text-primary);">{{ "{:,}".format(total_wards) }}</strong> wards
+            </p>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+    const stSel = document.getElementById('fpuState');
+    const lgSel = document.getElementById('fpuLga');
+    const wdSel = document.getElementById('fpuWard');
+    const puSel = document.getElementById('fpuPu');
+    const result = document.getElementById('fpuResult');
+
+    function resetSel(sel, msg) {
+        sel.innerHTML = '<option value="">' + msg + '</option>';
+        sel.disabled = true;
+    }
+    function loadOpts(sel, url, labelKey) {
+        sel.innerHTML = '<option value="">Loading...</option>';
+        sel.disabled = true;
+        fetch(url).then(r => r.json()).then(data => {
+            sel.innerHTML = '<option value="">Select...</option>';
+            data.forEach(item => {
+                const o = document.createElement('option');
+                o.value = item.id;
+                o.textContent = item[labelKey] || item.name;
+                sel.appendChild(o);
+            });
+            sel.disabled = false;
+        });
+    }
+
+    stSel.addEventListener('change', function() {
+        resetSel(lgSel, 'Select LGA...'); resetSel(wdSel, 'Select ward...'); resetSel(puSel, 'Select polling unit...');
+        result.style.display = 'none';
+        if (this.value) loadOpts(lgSel, '/api/lgas/' + this.value, 'name');
+    });
+    lgSel.addEventListener('change', function() {
+        resetSel(wdSel, 'Select ward...'); resetSel(puSel, 'Select polling unit...');
+        result.style.display = 'none';
+        if (this.value) loadOpts(wdSel, '/api/wards/' + this.value, 'name');
+    });
+    wdSel.addEventListener('change', function() {
+        resetSel(puSel, 'Select polling unit...');
+        result.style.display = 'none';
+        if (this.value) loadOpts(puSel, '/api/polling-units/' + this.value, 'name');
+    });
+    puSel.addEventListener('change', function() {
+        if (!this.value) { result.style.display = 'none'; return; }
+        const puName = puSel.options[puSel.selectedIndex].text;
+        const stateName = stSel.options[stSel.selectedIndex].text;
+        const lgaName = lgSel.options[lgSel.selectedIndex].text;
+        const wardName = wdSel.options[wdSel.selectedIndex].text;
+        result.innerHTML = `
+            <div style="background:rgba(0,148,1,0.06);border:1px solid rgba(0,148,1,0.2);border-radius:12px;padding:1.2rem;">
+                <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--ng-green);margin-bottom:0.6rem;">
+                    <i class="bi bi-check-circle-fill me-1"></i> Your Polling Unit
+                </div>
+                <div style="font-weight:800;font-size:1.1rem;color:var(--text-primary);margin-bottom:0.5rem;">
+                    ${puName}
+                </div>
+                <div style="font-size:0.85rem;color:var(--text-secondary);line-height:1.6;">
+                    <div><i class="bi bi-pin-map me-1" style="color:var(--text-tertiary);"></i> ${wardName} Ward</div>
+                    <div><i class="bi bi-building me-1" style="color:var(--text-tertiary);"></i> ${lgaName} LGA</div>
+                    <div><i class="bi bi-geo-alt me-1" style="color:var(--text-tertiary);"></i> ${stateName} State</div>
+                </div>
+            </div>
+        `;
+        result.style.display = '';
+    });
+})();
+</script>
+{% endblock %}
