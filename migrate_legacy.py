@@ -137,10 +137,6 @@ def migrate_legacy():
     _seed_upcoming_elections()
 
     db.session.commit()
-
-    # ── 5. Import GPS coordinates ──────────────────────────────────────
-    _import_gps_coordinates()
-
     print("[migrate_legacy] Migration complete.")
 
 

@@ -48,6 +48,10 @@ with app.app_context():
     if Ward.query.count() < 100:
         from seed_wards_pus import seed_wards_and_pus
         seed_wards_and_pus()
+    # Import GPS coordinates for polling units (after all PUs exist)
+    if PollingUnit.query.filter(PollingUnit.latitude.isnot(None)).count() == 0:
+        from migrate_legacy import _import_gps_coordinates
+        _import_gps_coordinates()
 
 
 # ══════════════════════════════════════════════════════════════════════════════
