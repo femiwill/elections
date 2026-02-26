@@ -2,6 +2,11 @@
 {% from "macros.html" import winner_card, breadcrumb %}
 
 {% block title %}{{ lga.name }} — {{ state.name }} — {{ election.name }}{% endblock %}
+{% block og_title %}{{ lga.name }} — {{ state.name }} — {{ election.name }}{% endblock %}
+{% block og_desc %}{{ current_type.name }} results for {{ lga.name }}, {{ state.name }}{% endblock %}
+{% block og_image %}<meta property="og:image" content="{{ request.url_root.rstrip('/') }}/share/card/{{ election.slug }}/{{ state.code }}/{{ lga.id }}{% if current_type %}?type={{ current_type.slug }}{% endif %}">{% endblock %}
+{% block twitter_card %}summary_large_image{% endblock %}
+{% block twitter_image %}<meta name="twitter:image" content="{{ request.url_root.rstrip('/') }}/share/card/{{ election.slug }}/{{ state.code }}/{{ lga.id }}{% if current_type %}?type={{ current_type.slug }}{% endif %}">{% endblock %}
 
 {% block breadcrumbs %}
 {{ breadcrumb([
@@ -10,6 +15,20 @@
     (state.name, url_for('state_page', slug=election.slug, state_code=state.code, type=current_type.slug)),
     (lga.name, None)
 ]) }}
+{% endblock %}
+
+{% block scroll_header %}
+<div class="scroll-header">
+    <div class="container">
+        <div class="sh-inner">
+            <span class="sh-title">{{ lga.name }} — {{ current_type.name }}</span>
+            <div class="d-flex align-items-center gap-2">
+                <div class="sh-bar"><div class="sh-bar-fill" style="width:{{ pct_reporting|default(0) }}%;"></div></div>
+                <span class="sh-pct">{{ pct_reporting|default(0) }}%</span>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block content %}

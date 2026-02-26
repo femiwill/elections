@@ -1882,6 +1882,105 @@ def api_admin_existing_results():
     return jsonify({'exists': False})
 
 
+# ── Share Card PNG Routes ─────────────────────────────────────────────────────
+
+@app.route('/share/card/<slug>')
+def share_card_election(slug):
+    """Generate a PNG share card for election-level (national) results."""
+    from share_card import generate_result_card
+
+    election = Election.query.filter_by(slug=slug).first_or_404()
+    type_slug = request.args.get('type', '')
+    selected_type = None
+    if type_slug:
+        selected_type = ElectionType.query.filter_by(
+            election_id=election.id, slug=type_slug
+        ).first()
+    if not selected_type:
+        selected_type = ElectionType.query.filter_by(election_id=election.id).first()
+    if not selected_type:
+        abort(404)
+
+    summary = get_results_summary(selected_type.id, 'national', None)
+    total_pus_rpt = Result.query.filter(
+        Result.election_type_id == selected_type.id,
+        Result.polling_unit_id.isnot(None),
+    ).with_entities(Result.polling_unit_id).distinct().count()
+    total_pus = PollingUnit.query.count()
+    pct = round(total_pus_rpt / total_pus * 100, 1) if total_pus > 0 else 0
+
+    buf = generate_result_card(election.name, 'National', summary, pct, election.status)
+    resp = Response(buf.getvalue(), mimetype='image/png')
+    resp.headers['Cache-Control'] = 'public, max-age=300'
+    return resp
+
+
+@app.route('/share/card/<slug>/<state_code>')
+def share_card_state(slug, state_code):
+    """Generate a PNG share card for state-level results."""
+    from share_card import generate_result_card
+
+    election = Election.query.filter_by(slug=slug).first_or_404()
+    state = State.query.filter_by(code=state_code.upper()).first_or_404()
+    type_slug = request.args.get('type', '')
+    selected_type = None
+    if type_slug:
+        selected_type = ElectionType.query.filter_by(
+            election_id=election.id, slug=type_slug
+        ).first()
+    if not selected_type:
+        selected_type = ElectionType.query.filter_by(election_id=election.id).first()
+    if not selected_type:
+        abort(404)
+
+    summary = get_results_summary(selected_type.id, 'state', state.id)
+    pus_in_state = PollingUnit.query.join(Ward).join(LGA).filter(LGA.state_id == state.id).count()
+    pus_rpt = Result.query.filter(
+        Result.election_type_id == selected_type.id,
+        Result.state_id == state.id,
+        Result.polling_unit_id.isnot(None),
+    ).with_entities(Result.polling_unit_id).distinct().count()
+    pct = round(pus_rpt / pus_in_state * 100, 1) if pus_in_state > 0 else 0
+
+    buf = generate_result_card(election.name, state.name, summary, pct, election.status)
+    resp = Response(buf.getvalue(), mimetype='image/png')
+    resp.headers['Cache-Control'] = 'public, max-age=300'
+    return resp
+
+
+@app.route('/share/card/<slug>/<state_code>/<int:lga_id>')
+def share_card_lga(slug, state_code, lga_id):
+    """Generate a PNG share card for LGA-level results."""
+    from share_card import generate_result_card
+
+    election = Election.query.filter_by(slug=slug).first_or_404()
+    lga = LGA.query.get_or_404(lga_id)
+    type_slug = request.args.get('type', '')
+    selected_type = None
+    if type_slug:
+        selected_type = ElectionType.query.filter_by(
+            election_id=election.id, slug=type_slug
+        ).first()
+    if not selected_type:
+        selected_type = ElectionType.query.filter_by(election_id=election.id).first()
+    if not selected_type:
+        abort(404)
+
+    summary = get_results_summary(selected_type.id, 'lga', lga.id)
+    pus_in_lga = PollingUnit.query.join(Ward).filter(Ward.lga_id == lga.id).count()
+    pus_rpt = Result.query.filter(
+        Result.election_type_id == selected_type.id,
+        Result.lga_id == lga.id,
+        Result.polling_unit_id.isnot(None),
+    ).with_entities(Result.polling_unit_id).distinct().count()
+    pct = round(pus_rpt / pus_in_lga * 100, 1) if pus_in_lga > 0 else 0
+
+    buf = generate_result_card(election.name, lga.name, summary, pct, election.status)
+    resp = Response(buf.getvalue(), mimetype='image/png')
+    resp.headers['Cache-Control'] = 'public, max-age=300'
+    return resp
+
+
 # ══════════════════════════════════════════════════════════════════════════════
 # MAIN
 # ══════════════════════════════════════════════════════════════════════════════

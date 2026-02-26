@@ -4,12 +4,29 @@
 {% block title %}{{ election.name }} — Nigeria Election Results{% endblock %}
 {% block og_title %}{{ election.name }} — Nigeria Election Results{% endblock %}
 {% block og_desc %}Track live results for {{ election.name }} across Nigeria{% endblock %}
+{% block og_image %}<meta property="og:image" content="{{ request.url_root.rstrip('/') }}/share/card/{{ election.slug }}{% if current_type %}?type={{ current_type.slug }}{% endif %}">{% endblock %}
+{% block twitter_card %}summary_large_image{% endblock %}
+{% block twitter_image %}<meta name="twitter:image" content="{{ request.url_root.rstrip('/') }}/share/card/{{ election.slug }}{% if current_type %}?type={{ current_type.slug }}{% endif %}">{% endblock %}
 
 {% block breadcrumbs %}
 {{ breadcrumb([
     ('Elections', url_for('index')),
     (election.name, None)
 ]) }}
+{% endblock %}
+
+{% block scroll_header %}
+<div class="scroll-header">
+    <div class="container">
+        <div class="sh-inner">
+            <span class="sh-title">{{ election.name }}</span>
+            <div class="d-flex align-items-center gap-2">
+                <div class="sh-bar"><div class="sh-bar-fill" style="width:{{ national_pct_reporting|default(0) }}%;"></div></div>
+                <span class="sh-pct">{{ national_pct_reporting|default(0) }}%</span>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block content %}
