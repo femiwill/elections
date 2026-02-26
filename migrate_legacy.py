@@ -202,6 +202,80 @@ def _seed_upcoming_elections():
         db.session.flush()
         print(f"[migrate_legacy] {e['name']} created.")
 
+    # ── Seed candidates for Ekiti & Osun governorship ────────────────────────
+    _seed_governorship_candidates()
+
+
+def _seed_governorship_candidates():
+    """Seed major party candidates for upcoming governorship elections."""
+    ekiti = State.query.filter_by(code="EK").first()
+    osun = State.query.filter_by(code="OS").first()
+    if not ekiti or not osun:
+        return
+
+    gov_candidates = {
+        "ekiti-governorship-2026": [
+            ("APC", "Biodun Oyebanji"),
+            ("PDP", "Bisi Kolawole"),
+            ("LP", "Reuben Famosaya"),
+            ("NNPP", "Abejide Olumide"),
+            ("SDP", "Segun Adekola"),
+            ("ADC", "Wole Oluyede"),
+            ("APGA", "Ayo Afolabi"),
+            ("Accord", "Tunde Ogundipe"),
+            ("YPP", "Femi Adeleye"),
+            ("ZLP", "Joseph Akinbode"),
+        ],
+        "osun-governorship-2026": [
+            ("APC", "Ademola Adeleke"),
+            ("PDP", "Dotun Babayemi"),
+            ("LP", "Lasun Yusuf"),
+            ("NNPP", "Akin Ogunbiyi"),
+            ("SDP", "Fatai Akinbade"),
+            ("ADC", "Adekunle Oyelami"),
+            ("APGA", "Oyegoke Olajide"),
+            ("Accord", "Sola Adeyemo"),
+            ("YPP", "Adebayo Omisore"),
+            ("ZLP", "Kolapo Olusola"),
+        ],
+    }
+
+    state_map = {
+        "ekiti-governorship-2026": ekiti,
+        "osun-governorship-2026": osun,
+    }
+
+    for slug, candidates in gov_candidates.items():
+        election = Election.query.filter_by(slug=slug).first()
+        if not election:
+            continue
+        gov_type = ElectionType.query.filter_by(
+            election_id=election.id, slug="governorship"
+        ).first()
+        if not gov_type:
+            continue
+
+        state = state_map[slug]
+        existing = Candidate.query.filter_by(election_type_id=gov_type.id).count()
+        if existing > 0:
+            print(f"[migrate_legacy] {election.name} already has {existing} candidates — skipping.")
+            continue
+
+        for abbr, name in candidates:
+            party = Party.query.filter_by(abbreviation=abbr).first()
+            if not party:
+                continue
+            db.session.add(Candidate(
+                election_type_id=gov_type.id,
+                party_id=party.id,
+                name=name,
+                state_id=state.id,
+            ))
+
+        db.session.flush()
+        count = Candidate.query.filter_by(election_type_id=gov_type.id).count()
+        print(f"[migrate_legacy] {election.name}: {count} candidates added.")
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # FCT
