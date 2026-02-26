@@ -628,28 +628,27 @@ def state_browse(state_code):
 
     # Find elections relevant to this state (state-level + national)
     state_elections = []
+    state_name_lower = state.name.replace(' State', '').lower()
     for election in Election.query.order_by(Election.election_date.desc()).all():
-        for et in election.election_types:
-            # National elections apply to all states
-            if et.level == 'national':
-                state_elections.append(election)
-                break
-            # State-level: check if any candidates or results are scoped to this state
-            if et.level == 'state':
-                has_candidates = Candidate.query.filter_by(
-                    election_type_id=et.id, state_id=state.id
-                ).first()
-                has_results = Result.query.filter_by(
-                    election_type_id=et.id, state_id=state.id
-                ).first()
-                if has_candidates or has_results:
-                    state_elections.append(election)
+        matched = False
+        # Match by election name (e.g. "FCT" in "FCT Area Council", "Rivers" in "Rivers State Assembly")
+        if state_name_lower in election.name.lower():
+            matched = True
+        if not matched:
+            for et in election.election_types:
+                # National elections apply to all states
+                if et.level == 'national':
+                    matched = True
                     break
-                # Also match by name (e.g. "Ekiti" in "Ekiti State Governorship")
-                state_name = state.name.replace(' State', '')
-                if state_name.lower() in election.name.lower():
-                    state_elections.append(election)
+                # Check if any candidates or results are scoped to this state
+                if Candidate.query.filter_by(election_type_id=et.id, state_id=state.id).first():
+                    matched = True
                     break
+                if Result.query.filter_by(election_type_id=et.id, state_id=state.id).first():
+                    matched = True
+                    break
+        if matched:
+            state_elections.append(election)
 
     return render_template('state_browse.html',
                            state=state,
