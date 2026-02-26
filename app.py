@@ -2025,6 +2025,7 @@ def sitemap_xml():
 
     # Election pages
     elections = Election.query.all()
+    election_map = {e.id: e for e in elections}
     for election in elections:
         freq = 'hourly' if election.status == 'ongoing' else 'weekly'
         pages.append({
@@ -2033,38 +2034,44 @@ def sitemap_xml():
             'priority': '0.9',
         })
 
-        # State pages — only states that have results for this election
-        states_with_results = db.session.query(State).join(
-            Result, Result.state_id == State.id
-        ).join(
-            ElectionType, ElectionType.id == Result.election_type_id
-        ).filter(
-            ElectionType.election_id == election.id
-        ).distinct().all()
+    # States + LGAs with results — single query for all elections
+    state_rows = db.session.query(
+        Election.id, Election.slug, Election.status, State.code
+    ).select_from(Result).join(
+        ElectionType, ElectionType.id == Result.election_type_id
+    ).join(
+        Election, Election.id == ElectionType.election_id
+    ).join(
+        State, State.id == Result.state_id
+    ).distinct().all()
 
-        for state in states_with_results:
-            pages.append({
-                'loc': url_for('state_page', slug=election.slug, state_code=state.code, _external=True, _scheme='https'),
-                'changefreq': freq,
-                'priority': '0.8',
-            })
+    for eid, eslug, estatus, scode in state_rows:
+        freq = 'hourly' if estatus == 'ongoing' else 'weekly'
+        pages.append({
+            'loc': url_for('state_page', slug=eslug, state_code=scode, _external=True, _scheme='https'),
+            'changefreq': freq,
+            'priority': '0.8',
+        })
 
-            # LGA pages within this state that have results
-            lgas_with_results = db.session.query(LGA).join(
-                Result, Result.lga_id == LGA.id
-            ).join(
-                ElectionType, ElectionType.id == Result.election_type_id
-            ).filter(
-                ElectionType.election_id == election.id,
-                LGA.state_id == state.id
-            ).distinct().all()
+    lga_rows = db.session.query(
+        Election.slug, Election.status, State.code, LGA.id
+    ).select_from(Result).join(
+        ElectionType, ElectionType.id == Result.election_type_id
+    ).join(
+        Election, Election.id == ElectionType.election_id
+    ).join(
+        LGA, LGA.id == Result.lga_id
+    ).join(
+        State, State.id == LGA.state_id
+    ).distinct().all()
 
-            for lga in lgas_with_results:
-                pages.append({
-                    'loc': url_for('lga_page', slug=election.slug, state_code=state.code, lga_id=lga.id, _external=True, _scheme='https'),
-                    'changefreq': freq,
-                    'priority': '0.7',
-                })
+    for eslug, estatus, scode, lga_id in lga_rows:
+        freq = 'hourly' if estatus == 'ongoing' else 'weekly'
+        pages.append({
+            'loc': url_for('lga_page', slug=eslug, state_code=scode, lga_id=lga_id, _external=True, _scheme='https'),
+            'changefreq': freq,
+            'priority': '0.7',
+        })
 
     # Build XML
     xml_parts = ['<?xml version="1.0" encoding="UTF-8"?>']
