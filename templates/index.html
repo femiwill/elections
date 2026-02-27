@@ -49,11 +49,11 @@
                 <div class="stat-number" data-count="{{ '{:,}'.format(total_results) }}">0</div>
                 <div class="stat-label">Results Entered</div>
             </div>
-            <div class="stat-card">
+            <a href="#parties" class="stat-card" style="text-decoration:none;color:inherit;">
                 <div class="stat-icon" style="background:rgba(255,215,0,0.12);color:#b8960f;"><i class="bi bi-flag"></i></div>
                 <div class="stat-number" data-count="{{ total_parties }}">0</div>
                 <div class="stat-label">Political Parties</div>
-            </div>
+            </a>
         </div>
     </div>
 </section>
@@ -234,7 +234,7 @@
 </section>
 
 <!-- ═══ POLITICAL PARTIES ═══ -->
-<section class="pb-5">
+<section class="pb-5" id="parties">
     <div class="container">
         <div class="section-head reveal">
             <div class="icon-box" style="background:rgba(255,215,0,0.12);color:#b8960f;"><i class="bi bi-flag-fill"></i></div>
