@@ -232,5 +232,31 @@
         {% endfor %}
     </div>
 </section>
+
+<!-- ═══ POLITICAL PARTIES ═══ -->
+<section class="pb-5">
+    <div class="container">
+        <div class="section-head reveal">
+            <div class="icon-box" style="background:rgba(255,215,0,0.12);color:#b8960f;"><i class="bi bi-flag-fill"></i></div>
+            <div>
+                <h4>Political Parties</h4>
+                <p class="sub">{{ parties|length }} INEC-registered parties</p>
+            </div>
+        </div>
+        <div class="row g-2 reveal">
+            {% for party in parties %}
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="geo-card" style="padding:0.75rem;display:flex;align-items:center;gap:0.6rem;">
+                    <span style="width:10px;height:10px;border-radius:3px;background:{{ party.color }};flex-shrink:0;"></span>
+                    <div style="min-width:0;">
+                        <div style="font-weight:700;font-size:0.82rem;color:var(--text-primary);">{{ party.abbreviation }}</div>
+                        <div style="font-size:0.72rem;color:var(--text-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ party.name }}</div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
 {% endblock %}
 

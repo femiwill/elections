@@ -768,7 +768,8 @@ def index():
         state_info[s.id] = {'lga_count': lga_count, 'pu_count': pu_count}
 
     total_results = Result.query.count()
-    total_parties = Party.query.count()
+    parties = Party.query.order_by(Party.abbreviation).all()
+    total_parties = len(parties)
 
     return render_template('index.html',
                            upcoming_elections=upcoming,
@@ -778,7 +779,8 @@ def index():
                            geo_zones=geo_zones,
                            state_info=state_info,
                            total_results=total_results,
-                           total_parties=total_parties)
+                           total_parties=total_parties,
+                           parties=parties)
 
 
 @app.route('/find-polling-unit')
